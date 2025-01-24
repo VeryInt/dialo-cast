@@ -62,6 +62,10 @@
     },
     "license": "MIT",
     "dependencies": {
+        "@radix-ui/react-collapsible": "1.1.2",
+        "@radix-ui/react-progress": "1.1.1",
+        "@radix-ui/react-slider": "1.2.2",
+        "@radix-ui/react-slot": "1.1.1",
         "@tailwindcss/cli": "4.0.0",
         "@tailwindcss/postcss": "4.0.0",
         "@types/lodash": "4.17.14",

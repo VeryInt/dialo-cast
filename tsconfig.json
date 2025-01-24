@@ -13,11 +13,11 @@
         "moduleResolution": "node",
         "resolveJsonModule": true,
         "paths": {
-            "*": ["node_modules/*"],
-            "@/*": ["./*"]
+            "@/*": ["./*"],
+            "*": ["node_modules/*"]
         },
         "jsx": "react"
     },
     "exclude": ["node_modules/**"],
-    "include": ["src/**/*"]
+    "include": ["src/**/*", "src/renderer/lib", "src/renderer/components"]
 }
