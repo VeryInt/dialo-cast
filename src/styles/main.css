@@ -1,0 +1,13 @@
+@import 'tailwindcss';
+/* @import 'tailwindcss/preflight'; */
+@tailwind utilities;
+
+/* 您的自定义样式可以放在这里 */
+
+#root {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
