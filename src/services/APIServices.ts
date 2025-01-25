@@ -1,3 +1,10 @@
 import { ipcMain } from 'electron'
 
-export default function APIServices() {}
+const handlers = {}
+
+const events = {}
+
+export default {
+    handlers,
+    events,
+}

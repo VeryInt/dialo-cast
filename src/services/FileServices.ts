@@ -1,4 +1,11 @@
 import { ipcMain } from 'electron'
 import fs from 'fs/promises'
 
-export default function FileService() {}
+const handlers = {}
+
+const events = {}
+
+export default {
+    handlers,
+    events,
+}

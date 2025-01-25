@@ -1,10 +1,15 @@
 declare global {
     interface Window {
         electronAPI?: ElectronAPI
+        electronEvent?: ElectronEvent
     }
 }
 
-interface ElectronAPI {
+export interface ElectronEvent {
+    minimizeToTray: () => void
+}
+
+export interface ElectronAPI {
     getConfig: (key: string) => Promise<ConfigValue>
     saveConfig: (key: string, value: ConfigValue) => Promise<void>
 }

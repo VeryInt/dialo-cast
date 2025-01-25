@@ -1,13 +1,25 @@
 // 用于在应用启动时注册所有服务，需要在主进程中启动
 // 类似 nodejs 服务
-
 import _ from 'lodash'
-import fileServices from './FileServices'
-import apiServices from './APIServices'
-import systemServices from './SystemServices'
+import { ipcMain, BrowserWindow, clipboard } from 'electron'
+import FileServices from './FileServices'
+import APIServices from './APIServices'
+import SystemServices from './SystemServices'
 
 export default function setupServices() {
-    fileServices()
-    apiServices()
-    systemServices()
+    // fileServices()
+    // apiServices()
+    // systemServices()
+
+    Object.entries({ ...SystemServices.handlers, ...FileServices.handlers, ...APIServices.handlers }).forEach(
+        ([channel, handler]) => {
+            ipcMain.handle(channel, handler)
+        }
+    )
+
+    Object.entries({ ...SystemServices.events, ...FileServices.events, ...APIServices.events }).forEach(
+        ([event, handler]) => {
+            ipcMain.on(event, handler)
+        }
+    )
 }
