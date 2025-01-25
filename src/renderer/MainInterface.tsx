@@ -10,7 +10,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './component
 import { Loader2, Play, Pause, SkipBack, SkipForward, Edit2, ChevronDown, ChevronUp } from 'lucide-react'
 import { useMainStore } from './providers'
 import { electronServices } from '../services'
-import { extractJsonArrayFromText } from '../shared/utils'
+import { extractJsonArrayFromText, constsequentialAsyncCalls } from '../shared/utils'
+import { AUDIO_GAP_TEXT, VoicePreset } from '../shared/constants'
 import _ from 'lodash'
 
 export default function MainInterface() {
@@ -26,16 +27,6 @@ export const PodcastGenerator = () => {
     const topicRef = useRef(null)
     const { castTopic, isGenerating, updateCastTopic, updateIsGenerating } = state || {}
     const [audioFileName, setAudioFileName] = useState('')
-    useEffect(() => {
-        electronServices.mergetAudio(
-            [
-                `file:///C:/Users/luyi1/AppData/Roaming/dialo-cast/temp_audio/temp_1737797121443.mp3`,
-
-                `file:///C:/Users/luyi1/AppData/Roaming/dialo-cast/temp_audio/temp_1737796584461.mp3`,
-            ],
-            'output.mp3'
-        )
-    }, [])
     const handleUpdateTopic = topic => {
         updateCastTopic(topic)
     }
@@ -45,30 +36,48 @@ export const PodcastGenerator = () => {
         const dialogue = await electronServices.fetchDialogue({ topic: castTopic })
         let dialogueList = extractJsonArrayFromText(dialogue)
         if (dialogueList?.length) {
-            const testList = _.slice(dialogueList, 0, 2)
-            const fetchSaveList = _.compact(
-                _.map(testList, dialogueItem => {
-                    const { content, emotion } = dialogueItem || {}
+            const fetchList = _.compact(
+                _.map(dialogueList, dialogueItem => {
+                    const { content, emotion, host } = dialogueItem || {}
                     if (content) {
-                        return electronServices
-                            .fetchMinMaxAudio({ content, emotion: emotion || 'neutral' })
-                            .then((audioHex: string) => {
-                                return electronServices.saveAudio(audioHex)
-                            })
+                        return electronServices.fetchMinMaxAudio({
+                            content: `${content}${AUDIO_GAP_TEXT}`,
+                            emotion: emotion,
+                            voiceID: host == `Mike` ? VoicePreset.DomineeringYouth : VoicePreset.GirlVoice,
+                        })
                     }
                     return null
                 })
             )
-            console.log(`fetchSaveList`, fetchSaveList)
-            const fetchSaveResults = await Promise.all(fetchSaveList)
-            const audioFileList = _.map(fetchSaveResults, (fileInfo, fetchIndex) => {
-                const { name, filePath } = fileInfo || {}
-                return filePath
-            })
-            if (audioFileList?.length) {
-                await electronServices.mergetAudio(audioFileList, 'output.mp3')
-                setAudioFileName('output.mp3')
-            }
+            // const  fetchResults = await constsequentialAsyncCalls(fetchList)
+            const fetchResults = await Promise.all(fetchList)
+
+            // 直接通过合并 hex 生成
+            await electronServices.saveAudio(fetchResults.join(''), `output`)
+            setAudioFileName('output.mp3')
+            // const fetchSaveList = _.compact(
+            //     _.map(testList, dialogueItem => {
+            //         const { content, emotion } = dialogueItem || {}
+            //         if (content) {
+            //             return electronServices
+            //                 .fetchMinMaxAudio({ content, emotion: emotion || 'neutral' })
+            //                 .then((audioHex: string) => {
+            //                     return electronServices.saveAudio(audioHex)
+            //                 })
+            //         }
+            //         return null
+            //     })
+            // )
+            // console.log(`fetchSaveList`, fetchSaveList)
+            // const fetchSaveResults = await Promise.all(fetchSaveList)
+            // const audioFileList = _.map(fetchSaveResults, (fileInfo, fetchIndex) => {
+            //     const { name, filePath } = fileInfo || {}
+            //     return filePath
+            // })
+            // if (audioFileList?.length) {
+            //     await electronServices.mergetAudio(audioFileList, 'output.mp3')
+            //     setAudioFileName('output.mp3')
+            // }
         }
 
         updateIsGenerating(false)

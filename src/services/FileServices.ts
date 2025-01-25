@@ -4,16 +4,17 @@ import path from 'path'
 import { getConfig, saveConfig } from '../main/electronStore'
 import ffmpeg from 'fluent-ffmpeg'
 import ffmpegPath from 'ffmpeg-static'
-import ffprobePath from 'ffprobe-static'
 import _ from 'lodash'
+import { path as ffprobePath } from 'ffprobe-static'
 
-// 配置 FFmpeg
-if (ffmpegPath && ffprobePath) {
-    ffmpeg.setFfmpegPath(ffmpegPath)
-    ffmpeg.setFfprobePath(ffprobePath.path)
-} else {
-    console.error('FFmpeg 路径配置失败！')
-}
+// // 配置 FFmpeg
+// if (ffmpegPath && ffprobePath) {
+//     ffmpeg.setFfmpegPath(ffmpegPath)
+//     ffmpeg.setFfprobePath(ffprobePath)
+// } else {
+//     console.error('FFmpeg 路径配置失败！')
+// }
+
 const audioDir = path.join(app.getPath('userData'), 'audio')
 if (!fs.existsSync(audioDir)) {
     fs.mkdirSync(audioDir, { recursive: true })
@@ -21,23 +22,18 @@ if (!fs.existsSync(audioDir)) {
 
 const handlers = {
     // 保存音频文件
-    saveAudio: async (event, hexData: string) => {
-        const tempDir = path.join(app.getPath('userData'), 'temp_audio')
-        // 确保目录存在
-        if (!fs.existsSync(tempDir)) {
-            fs.mkdirSync(tempDir)
-        }
+    saveAudio: async (event, hexData: string, filename: string) => {
         const now = Date.now()
         try {
             const buffer = Buffer.from(hexData, 'hex')
-            const tempFileName = `temp_${now}.mp3`
-            const filePath = path.join(tempDir, tempFileName)
+            const fileNameWithSuffix = filename ? `${filename}.mp3` : `temp_${now}.mp3`
+            const filePath = path.join(audioDir, fileNameWithSuffix)
             await fs.promises.writeFile(filePath, buffer)
 
             const audioStoreInfo = (getConfig('audioInfo') as string) || '[]'
             const audioInfo = JSON.parse(audioStoreInfo)
             const newAudioInfo = {
-                name: tempFileName,
+                name: fileNameWithSuffix,
                 filePath: filePath,
                 timestamp: now,
             }

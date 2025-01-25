@@ -1,21 +1,23 @@
 import { ipcMain } from 'electron'
 import OpenAI from 'openai'
-import { PODCAST_EXPERT_PROMPT } from '../shared/constants'
+import { PODCAST_EXPERT_PROMPT, AUDIO_Emotion_List, VoicePreset } from '../shared/constants'
+import _ from 'lodash'
 let openaiInstance: OpenAI | null = null
 
 const handlers = {
     // 根据topic生成对话
     fetchDialogue: async (event, { topic, apiKey }: { topic: string; apiKey?: string }) => {
         try {
-            const openai = getOpenAI(apiKey)
+            const openai = getOpenAI(apiKey || process.env.DEEPSEEK_API_KEY)
             const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
                 { role: 'system', content: PODCAST_EXPERT_PROMPT },
                 { role: 'user', content: topic },
             ]
             const completion = await openai.chat.completions.create({
                 messages: messages,
-                model: `deepseek-coder-v2-lite-instruct`,
+                model: `deepseek-chat`, // `deepseek-reasoner`,
             })
+            console.log(completion?.choices[0]?.message?.content)
             return completion?.choices[0]?.message?.content
         } catch (error) {
             console.log('Error fetching dialogue:', error)
@@ -23,7 +25,10 @@ const handlers = {
         }
     },
 
-    fetchMinMaxAudio: async (event, { content, emotion }: { content: string; emotion?: string }) => {
+    fetchMinMaxAudio: async (
+        event,
+        { content, emotion, voiceID }: { content: string; emotion?: string; voiceID?: VoicePreset }
+    ) => {
         const apiKey = process.env.MIN_MAX_API_KEY
         console.log(`apikey is ${apiKey}`)
         const groundID = process.env.MIN_MAX_GROUND_ID
@@ -34,16 +39,16 @@ const handlers = {
                 Authorization: `Bearer ${apiKey}`,
                 'Content-Type': 'application/json',
             }
-            const body = {
+            const body: Record<string, any> = {
                 model: 'speech-01-turbo',
                 text: content,
                 stream: false,
                 voice_setting: {
-                    voice_id: 'male-qn-qingse',
+                    voice_id: voiceID || VoicePreset.DomineeringYouth,
                     speed: 1,
-                    vol: 1,
-                    pitch: 0,
-                    emotion: emotion || '',
+                    vol: 1.5, // 音量
+                    pitch: -1, // 声调
+                    // emotion: _.includes(AUDIO_Emotion_List, emotion) ? emotion : '',
                 },
                 audio_setting: {
                     sample_rate: 32000,
@@ -51,6 +56,9 @@ const handlers = {
                     format: 'mp3',
                     channel: 1,
                 },
+            }
+            if (_.includes(AUDIO_Emotion_List, emotion)) {
+                body.voice_setting.emotion = emotion
             }
             const result = await fetch(url, {
                 method: 'POST',
@@ -70,9 +78,9 @@ const events = {}
 const getOpenAI = (apiKey: string) => {
     apiKey = apiKey || ``
 
-    if (apiKey != global?.openaiAPI?.apiKey || !openaiInstance) {
+    if (!openaiInstance) {
         openaiInstance = new OpenAI({
-            baseURL: 'http://127.0.0.1:1234/v1',
+            baseURL: 'https://api.deepseek.com',
             apiKey: apiKey,
         })
         return openaiInstance

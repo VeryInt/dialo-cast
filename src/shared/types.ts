@@ -1,5 +1,4 @@
-import type { OpenAI } from 'openai'
-
+import { VoicePreset } from '../shared/constants'
 declare global {
     interface Window {
         electronAPI?: ElectronAPI
@@ -15,8 +14,16 @@ export interface ElectronAPI {
     getConfig: (key: string) => Promise<ConfigValue>
     saveConfig: (key: string, value: ConfigValue) => Promise<void>
     fetchDialogue: ({ topic }: { topic: string }) => Promise<string>
-    fetchMinMaxAudio: ({ content, emotion }: { content: string; emotion?: string }) => Promise<string>
-    saveAudio: (hexData: string) => Promise<Record<string, any>>
+    fetchMinMaxAudio: ({
+        content,
+        emotion,
+        voiceID,
+    }: {
+        content: string
+        emotion?: string
+        voiceID?: VoicePreset
+    }) => Promise<string>
+    saveAudio: (hexData: string, filename: string) => Promise<Record<string, any>>
     mergetAudio: (
         audioFileList: string[],
         filename: string
