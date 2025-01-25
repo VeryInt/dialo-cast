@@ -4,6 +4,17 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import type { ConfigValue, ElectronEvent, ElectronAPI } from '../shared/types'
 
+const APIList: (keyof ElectronAPI)[] = [
+    'getConfig',
+    'saveConfig',
+    'fetchDialogue',
+    'fetchMinMaxAudio',
+    'saveAudio',
+    'mergetAudio',
+    'readAudioFile',
+]
+const eventList: (keyof ElectronEvent)[] = ['minimizeToTray']
+
 // 类型安全的通用 IPC 调用构造器, 精确约束每个属性
 const createIPCBridge = <T extends { [K in keyof T]: (...args: any[]) => Promise<any> }>(
     APIList: (keyof ElectronAPI)[]
@@ -25,7 +36,7 @@ const createIPCBridge = <T extends { [K in keyof T]: (...args: any[]) => Promise
 }
 
 // 通过类型系统自动生成桥接方法
-const electronAPI = createIPCBridge<ElectronAPI>(['getConfig', 'saveConfig'])
+const electronAPI = createIPCBridge<ElectronAPI>(APIList)
 
 // 安全暴露给渲染进程,
 // 在preload阶段挂载方法到electronAPI上，供客户端页面调用，然后触发 ipcRenderer 发送消息到主进程
@@ -46,7 +57,7 @@ const createEventBridge = <T extends { [K in keyof T]: (...args: any[]) => void 
 }
 
 // 自动生成事件桥接方法
-const electronEvent = createEventBridge<ElectronEvent>(['minimizeToTray'])
+const electronEvent = createEventBridge<ElectronEvent>(eventList)
 
 // 暴露给渲染进程
 contextBridge.exposeInMainWorld('electronEvent', electronEvent)
