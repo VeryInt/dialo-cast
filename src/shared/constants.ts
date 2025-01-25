@@ -9,7 +9,8 @@ export const PODCAST_EXPERT_PROMPT = `你是一个专业播客脚本生成器，
 使用纯文本标记主持人对话和旁白，并且最终以对象数组的方式返回，另外需要在数组的开头加上标识符{{jsonstart}}，在数组的末尾加上标识符{{jsonend}}好方便我截取并且格式化：
 {{jsonstart}}[
 {"host": "Mike", "content": "这是Mike说的话"},
-{"host": "Jessica", "emotion": "surprised", "content": "这是Jessica惊讶时说的话"}
+{"host": "Jessica", "emotion": "surprised", "content": "这是Jessica惊讶时说的话"},
+{"host": "Mike", "emotion":"happy", "content": "这是Mike高兴时说的话"},
 ]{{jsonend}}
 
 禁止使用任何括号提示词、注释或非内容文本，记住需要严格按照上面提供的格式输出

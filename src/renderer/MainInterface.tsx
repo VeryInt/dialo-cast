@@ -10,6 +10,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './component
 import { Loader2, Play, Pause, SkipBack, SkipForward, Edit2, ChevronDown, ChevronUp } from 'lucide-react'
 import { useMainStore } from './providers'
 import { electronServices } from '../services'
+import { extractJsonArrayFromText } from '../shared/utils'
+import _ from 'lodash'
 
 export default function MainInterface() {
     return (
@@ -23,56 +25,53 @@ export const PodcastGenerator = () => {
     const state = useMainStore(state => state)
     const topicRef = useRef(null)
     const { castTopic, isGenerating, updateCastTopic, updateIsGenerating } = state || {}
-    const [audioFileName, setAudioFileName] = useState('temp_1737793507628.mp3')
+    const [audioFileName, setAudioFileName] = useState('')
+    useEffect(() => {
+        electronServices.mergetAudio(
+            [
+                `file:///C:/Users/luyi1/AppData/Roaming/dialo-cast/temp_audio/temp_1737797121443.mp3`,
+
+                `file:///C:/Users/luyi1/AppData/Roaming/dialo-cast/temp_audio/temp_1737796584461.mp3`,
+            ],
+            'output.mp3'
+        )
+    }, [])
     const handleUpdateTopic = topic => {
         updateCastTopic(topic)
     }
     const handleGenerate = async () => {
         console.log(`topic`, castTopic)
         updateIsGenerating(true)
-        electronServices
-            .fetchDialogue({ topic: castTopic })
-            .then(dialogue => {
-                console.log('Dialogue:', dialogue)
-                // 正则表达式用于提取返回内容的数组对话，开头是{{jsonstart}}，结尾是{{jsonend}}，中间是json格式的数组对话
-                const regex = /{{jsonstart}}\s*\[[\s\S]*?\]\s*{{jsonend}}/
-                const match = dialogue.match(regex)
-                let jsonArray = []
-                if (match && match[0]) {
-                    let jsonString = match[0].replace('{{jsonstart}}', '').replace('{{jsonend}}', '').trim()
-                    jsonString = jsonString.replace(/[\r\n]+/g, '') // 移除所有换行符
-                    console.log('Extracted JSON String:', jsonString)
-                    try {
-                        jsonArray = JSON.parse(jsonString)
-                    } catch {
-                        console.error('Invalid JSON format in dialogue')
+        const dialogue = await electronServices.fetchDialogue({ topic: castTopic })
+        let dialogueList = extractJsonArrayFromText(dialogue)
+        if (dialogueList?.length) {
+            const testList = _.slice(dialogueList, 0, 2)
+            const fetchSaveList = _.compact(
+                _.map(testList, dialogueItem => {
+                    const { content, emotion } = dialogueItem || {}
+                    if (content) {
+                        return electronServices
+                            .fetchMinMaxAudio({ content, emotion: emotion || 'neutral' })
+                            .then((audioHex: string) => {
+                                return electronServices.saveAudio(audioHex)
+                            })
                     }
+                    return null
+                })
+            )
+            console.log(`fetchSaveList`, fetchSaveList)
+            const fetchSaveResults = await Promise.all(fetchSaveList)
+            const audioFileList = _.map(fetchSaveResults, (fileInfo, fetchIndex) => {
+                const { name, filePath } = fileInfo || {}
+                return filePath
+            })
+            if (audioFileList?.length) {
+                await electronServices.mergetAudio(audioFileList, 'output.mp3')
+                setAudioFileName('output.mp3')
+            }
+        }
 
-                    console.log('Parsed JSON Array:', jsonArray)
-                }
-                updateIsGenerating(false)
-                return jsonArray
-            })
-            .catch(error => {
-                console.log('Error fetching dialogue:', error)
-                updateIsGenerating(false)
-            })
-            .then(dialogueList => {
-                console.log('Dialogue Result:', dialogueList?.[0])
-                const { content, emotion } = dialogueList?.[0] || {}
-                if (content) {
-                    electronServices
-                        .fetchMinMaxAudio({ content, emotion: emotion || 'neutral' })
-                        .then((audioHex: string) => {
-                            return electronServices.saveAudio(audioHex)
-                        })
-                        .catch(error => console.log('Error fetching min max audio:', error))
-                        .then((fileInfo: Record<string, any>) => {
-                            const { name, filePath } = fileInfo || {}
-                            setAudioFileName(name)
-                        })
-                }
-            })
+        updateIsGenerating(false)
     }
 
     return (
@@ -125,7 +124,9 @@ const AudioPlayer = ({ audioFileName }: { audioFileName: string }) => {
             // 记得在不需要时释放
             audio.onended = () => URL.revokeObjectURL(url)
         }
-        playAudio()
+        if (audioFileName) {
+            playAudio()
+        }
     }, [audioFileName])
 
     if (!audioFileName) {

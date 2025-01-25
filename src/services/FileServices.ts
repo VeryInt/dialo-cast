@@ -4,7 +4,20 @@ import path from 'path'
 import { getConfig, saveConfig } from '../main/electronStore'
 import ffmpeg from 'fluent-ffmpeg'
 import ffmpegPath from 'ffmpeg-static'
+import ffprobePath from 'ffprobe-static'
 import _ from 'lodash'
+
+// 配置 FFmpeg
+if (ffmpegPath && ffprobePath) {
+    ffmpeg.setFfmpegPath(ffmpegPath)
+    ffmpeg.setFfprobePath(ffprobePath.path)
+} else {
+    console.error('FFmpeg 路径配置失败！')
+}
+const audioDir = path.join(app.getPath('userData'), 'audio')
+if (!fs.existsSync(audioDir)) {
+    fs.mkdirSync(audioDir, { recursive: true })
+}
 
 const handlers = {
     // 保存音频文件
@@ -38,7 +51,6 @@ const handlers = {
         }
     },
     mergetAudio: async (event, audioFileList: string[], filename: string) => {
-        const audioDir = path.join(app.getPath('userData'), 'audio')
         // 生成输出路径
         const outputPath = path.join(audioDir, `merged_${Date.now()}.mp3`)
         await new Promise((resolve, reject) => {
@@ -60,7 +72,7 @@ const handlers = {
         }
     },
     readAudioFile: async (_, filename): Promise<Buffer> => {
-        const filePath = path.join(app.getPath('userData'), 'temp_audio', filename)
+        const filePath = path.join(audioDir, filename)
 
         const buffer = await fs.promises.readFile(filePath)
         return buffer
