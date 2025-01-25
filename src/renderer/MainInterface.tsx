@@ -4,6 +4,7 @@ import { Input } from './components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card'
 import { Textarea } from './components/ui/textarea'
 import { Progress } from './components/ui/progress'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/tabs'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './components/ui/table'
 import { Slider } from './components/ui/slider'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './components/ui/collapsible'
@@ -17,11 +18,112 @@ import _ from 'lodash'
 export default function MainInterface() {
     const state = useMainStore(state => state)
     const { audioPlayFile } = state || {}
+    const [activeTab, setActiveTab] = useState('topicCast')
     return (
         <div className="flex w-full flex-col gap-6">
-            <PodcastGenerator />
-            <AudioPlayer audioFileName={audioPlayFile || 'output.mp3'} />
+            <div className="">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                    <TabsList className="grid w-full grid-cols-2 gap-2">
+                        <TabsTrigger value="topicCast" className="flex items-center cursor-pointer">
+                            主题播客
+                        </TabsTrigger>
+                        <TabsTrigger value="productItinerary" className="flex items-center cursor-pointer">
+                            产品行程
+                        </TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="topicCast">
+                        <PodcastGenerator />
+                    </TabsContent>
+                    <TabsContent value="productItinerary">
+                        <ProductCastGenerator />
+                    </TabsContent>
+                </Tabs>
+            </div>
+            <AudioPlayer audioFileName={audioPlayFile} />
         </div>
+    )
+}
+
+export const ProductCastGenerator = () => {
+    const state = useMainStore(state => state)
+    const [generatingStatus, setGeneratingStatus] = useState(GeneratingSatus.DialogueGenerating)
+    const topicRef = useRef(null)
+    const { castTopic, isGenerating, updateCastTopic, updateIsGenerating, updateAudioPlayFile } = state || {}
+    const handleUpdateTopic = topic => {
+        updateCastTopic(topic)
+    }
+
+    const handleGenerateProduct = async () => {
+        // fetchProductDailyList
+        console.log(`topic`, castTopic)
+        updateIsGenerating(true)
+        setGeneratingStatus(GeneratingSatus.FetchingItinerary)
+        const producItinerary = await electronServices.fetchProductDailyList({ productID: Number(castTopic) })
+        console.log(`producItinerary`, producItinerary)
+        setGeneratingStatus(GeneratingSatus.DialogueGenerating)
+        const dialogue = await electronServices.fetchDialogue({ topic: producItinerary })
+        setGeneratingStatus(GeneratingSatus.DialogueExtracting)
+        let dialogueList = extractJsonArrayFromText(dialogue)
+        if (dialogueList?.length) {
+            const fetchList = _.compact(
+                _.map(dialogueList, (dialogueItem, dialogueIndex) => {
+                    const { content, emotion, host } = dialogueItem || {}
+                    if (content) {
+                        return electronServices.fetchMinMaxAudio({
+                            content: `${dialogueIndex == 0 ? AUDIO_GAP_TEXT : ''}${content}${AUDIO_GAP_TEXT}`,
+                            emotion: emotion,
+                            voiceID:
+                                host == `Mike`
+                                    ? voicePresets.maleQnJingyingBeta.value
+                                    : voicePresets.attractiveGirl.value,
+                        })
+                    }
+                    return null
+                })
+            )
+            setGeneratingStatus(GeneratingSatus.AudioRequesting)
+            // const  fetchResults = await constsequentialAsyncCalls(fetchList)
+            const fetchResults = await Promise.all(fetchList)
+
+            // 直接通过合并 hex 生成
+            const now = Date.now()
+            setGeneratingStatus(GeneratingSatus.AudioSynthesizing)
+            await electronServices.saveAudio(fetchResults.join(''), `${now}`)
+            updateAudioPlayFile(`${now}.mp3`)
+        }
+        updateIsGenerating(false)
+    }
+
+    return (
+        <>
+            <Card className=" border-gray-100 shadow-xl p-6 w-full mx-auto">
+                <CardHeader>
+                    <CardTitle>生成行程讨论</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <Input
+                        ref={topicRef}
+                        placeholder="输入产品ID"
+                        value={castTopic}
+                        onChange={e => handleUpdateTopic(e.target.value)}
+                    />
+                    <Button
+                        onClick={handleGenerateProduct}
+                        disabled={!castTopic || isGenerating}
+                        className={`w-full ${castTopic ? 'cursor-pointer' : ''}`}
+                    >
+                        {isGenerating ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                <span>{generatingStatus}</span>
+                            </>
+                        ) : (
+                            '生成讨论对话'
+                        )}
+                    </Button>
+                </CardContent>
+            </Card>
+        </>
     )
 }
 
@@ -210,7 +312,7 @@ const AudioPlayer = ({ audioFileName }: { audioFileName: string }) => {
 
     useEffect(() => {
         const audioHtmlElement = audioRef.current as HTMLAudioElement
-        if (audioHtmlElement.hasAttribute('src')) {
+        if (audioHtmlElement?.hasAttribute('src')) {
             if (isPlaying) {
                 audioHtmlElement.play()
             } else {

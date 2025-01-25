@@ -76,6 +76,8 @@ export const voicePresets = {
 export type VoicePresetValues = (typeof voicePresets)[keyof typeof voicePresets]['value']
 
 export const enum GeneratingSatus {
+    //获取行程中
+    FetchingItinerary = '获取行程中',
     // 对话生成中
     DialogueGenerating = `对话生成中`,
     // 对话摘取中

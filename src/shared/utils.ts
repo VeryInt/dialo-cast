@@ -1,3 +1,6 @@
+import _ from 'lodash'
+import sanitizeHtml from 'sanitize-html'
+
 export const sleep = (seconds: number) => {
     return new Promise(resolve => {
         setTimeout(resolve, seconds * 1000)
@@ -54,4 +57,43 @@ export const formatPlayTime = (playTime: number): string => {
     const minutes = Math.floor(playTime / 60)
     const seconds = Math.floor(playTime % 60)
     return `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`
+}
+
+const ActiveTypeList = {
+    [8]: `交通`,
+}
+export const extractDailyInfo = (IntroductionInfoList: Record<string, any>[]): string => {
+    let dailyText = ''
+    _.map(IntroductionInfoList, (item, index) => {
+        const { Desc, DailyList } = item || {}
+        dailyText += `第${index + 1}天 ${Desc}\n`
+        _.map(DailyList, (dailyItem, dailyIndex) => {
+            const { DepartTime, ActiveType, Desc, ScenicSpotList, TakeMinutes } = dailyItem || {}
+            let theInfo = ``
+            if (DepartTime) {
+                theInfo += `时间: ${DepartTime}\n`
+            }
+            if (Desc) {
+                theInfo += `活动内容: ${sanitizeHtmlClear(Desc || '')}\n`
+            }
+            if (ScenicSpotList?.length) {
+                _.map(ScenicSpotList, (scenic, scenicIndex) => {
+                    const { Introduce, SuffixName, Name } = scenic || {}
+                    theInfo += `景点${scenicIndex + 1}: ${Name}${SuffixName || ''}\n${sanitizeHtmlClear(Introduce || '')}\n`
+                })
+            }
+            if (TakeMinutes > 0) {
+                theInfo += `活动时间: ${TakeMinutes}分钟\n`
+            }
+            dailyText += theInfo + '\n'
+        })
+    })
+    return dailyText
+}
+
+const sanitizeHtmlClear = html => {
+    return sanitizeHtml(html || '', {
+        allowedTags: [],
+        allowedAttributes: [],
+    })
 }

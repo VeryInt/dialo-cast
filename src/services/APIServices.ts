@@ -2,6 +2,7 @@ import { ipcMain } from 'electron'
 import OpenAI from 'openai'
 import { PODCAST_EXPERT_PROMPT, AUDIO_Emotion_List, VoicePresetValues, voicePresets } from '../shared/constants'
 import _ from 'lodash'
+import { extractDailyInfo } from '../shared/utils'
 let openaiInstance: OpenAI | null = null
 
 const handlers = {
@@ -69,6 +70,52 @@ const handlers = {
             console.log(`response`, typeof response?.data?.audio, response)
             return response?.data?.audio
         } catch (e) {}
+        return null
+    },
+
+    fetchProductDailyList: async (event, { productID }: { productID: number }) => {
+        const url = `https://online.ctrip.com/restapi/soa2/12447/ProductDetailTimingV5`
+        try {
+            const headers = {
+                'Content-Type': 'application/json',
+            }
+            const body: Record<string, any> = {
+                contentType: 'json',
+                head: {
+                    cid: '',
+                    ctok: '',
+                    cver: '1.0',
+                    lang: '01',
+                    sid: '8888',
+                    syscode: '09',
+                    auth: '',
+                    extension: [],
+                },
+                ChannelCode: 0,
+                ChannelId: 114,
+                PlatformId: 4,
+                Version: '856000',
+                Locale: 'zh-CN',
+                Currency: 'CNY',
+                ProductId: String(productID),
+                DepartureCityId: 2,
+                QueryNode: {
+                    IsTravelIntroductionInfo: true,
+                },
+            }
+            const result = await fetch(url, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(body),
+            })
+            const response = await result.json()
+            const IntroductionInfoList =
+                response?.Data?.TravelIntroductionInfo?.TravelIntroductionList?.[0].IntroductionInfoList || []
+            console.log(`IntroductionInfoList`)
+            return extractDailyInfo(IntroductionInfoList)
+        } catch (e) {
+            console.log(`fetchProductDailyList error `, e)
+        }
         return null
     },
 }

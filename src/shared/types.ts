@@ -14,6 +14,7 @@ export interface ElectronAPI {
     getConfig: (key: string) => Promise<ConfigValue>
     saveConfig: (key: string, value: ConfigValue) => Promise<void>
     fetchDialogue: ({ topic }: { topic: string }) => Promise<string>
+    fetchProductDailyList: ({ productID }: { productID: number }) => Promise<string>
     fetchMinMaxAudio: ({
         content,
         emotion,
