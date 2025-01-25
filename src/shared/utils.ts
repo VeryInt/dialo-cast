@@ -48,3 +48,10 @@ export const constsequentialAsyncCalls = async <T>(tasks: (() => Promise<T>)[], 
 
     return results
 }
+
+export const formatPlayTime = (playTime: number): string => {
+    playTime = playTime || 0
+    const minutes = Math.floor(playTime / 60)
+    const seconds = Math.floor(playTime % 60)
+    return `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`
+}

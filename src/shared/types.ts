@@ -1,4 +1,4 @@
-import { VoicePreset } from '../shared/constants'
+import { VoicePresetValues } from '../shared/constants'
 declare global {
     interface Window {
         electronAPI?: ElectronAPI
@@ -21,7 +21,7 @@ export interface ElectronAPI {
     }: {
         content: string
         emotion?: string
-        voiceID?: VoicePreset
+        voiceID?: VoicePresetValues
     }) => Promise<string>
     saveAudio: (hexData: string, filename: string) => Promise<Record<string, any>>
     mergetAudio: (

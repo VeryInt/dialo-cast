@@ -16,7 +16,7 @@ const Main = () => {
     })
 
     return (
-        <div className="flex flex-col w-full p-6">
+        <div className="flex flex-col w-full p-6 h-full bg-gray-300">
             <MainInterface />
         </div>
     )

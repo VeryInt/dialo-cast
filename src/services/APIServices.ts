@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron'
 import OpenAI from 'openai'
-import { PODCAST_EXPERT_PROMPT, AUDIO_Emotion_List, VoicePreset } from '../shared/constants'
+import { PODCAST_EXPERT_PROMPT, AUDIO_Emotion_List, VoicePresetValues, voicePresets } from '../shared/constants'
 import _ from 'lodash'
 let openaiInstance: OpenAI | null = null
 
@@ -27,7 +27,7 @@ const handlers = {
 
     fetchMinMaxAudio: async (
         event,
-        { content, emotion, voiceID }: { content: string; emotion?: string; voiceID?: VoicePreset }
+        { content, emotion, voiceID }: { content: string; emotion?: string; voiceID?: VoicePresetValues }
     ) => {
         const apiKey = process.env.MIN_MAX_API_KEY
         console.log(`apikey is ${apiKey}`)
@@ -44,7 +44,7 @@ const handlers = {
                 text: content,
                 stream: false,
                 voice_setting: {
-                    voice_id: voiceID || VoicePreset.DomineeringYouth,
+                    voice_id: voiceID || voicePresets.badaoShaoye.value,
                     speed: 1,
                     vol: 1.5, // 音量
                     pitch: -1, // 声调

@@ -2,52 +2,88 @@ export const AUDIO_GAP_TEXT = `<#0.60#>`
 
 export const AUDIO_Emotion_List = ['happy', 'sad', 'angry', 'fearful', 'disgusted', 'surprised', 'neutral']
 
-export const enum VoicePreset {
-    // 基础音色
-    YouthfulVoice = 'male-qn-qingse',
-    EliteYouth = 'male-qn-jingying',
-    DomineeringYouth = 'male-qn-badao',
-    CollegeYouth = 'male-qn-daxuesheng',
-    GirlVoice = 'female-shaonv',
-    MatureFemale = 'female-yujie',
-    MatureWoman = 'female-chengshu',
-    SweetVoice = 'female-tianmei',
+type VoicePreset = {
+    desc: string
+    value: string
+}
 
-    // 主持人
-    MalePresenter = 'presenter_male',
-    FemalePresenter = 'presenter_female',
+type VoicePresetCollection = {
+    [key: string]: VoicePreset
+}
 
-    // 有声书
-    AudiobookMale1 = 'audiobook_male_1',
-    AudiobookMale2 = 'audiobook_male_2',
-    AudiobookFemale1 = 'audiobook_female_1',
-    AudiobookFemale2 = 'audiobook_female_2',
+export const voicePresets = {
+    // 基础青年音色
+    maleQnQingse: { desc: '青涩青年音色', value: 'male-qn-qingse' },
+    maleQnJingying: { desc: '精英青年音色', value: 'male-qn-jingying' },
+    maleQnBadao: { desc: '霸道青年音色', value: 'male-qn-badao' },
+    maleQnDaxuesheng: { desc: '青年大学生音色', value: 'male-qn-daxuesheng' },
 
-    // 精品音色 (Beta)
-    YouthfulVoiceBeta = 'male-qn-qingse-jingpin',
-    EliteYouthBeta = 'male-qn-jingying-jingpin',
-    DomineeringYouthBeta = 'male-qn-badao-jingpin',
-    CollegeYouthBeta = 'male-qn-daxuesheng-jingpin',
-    GirlVoiceBeta = 'female-shaonv-jingpin',
-    MatureFemaleBeta = 'female-yujie-jingpin',
-    MatureWomanBeta = 'female-chengshu-jingpin',
-    SweetVoiceBeta = 'female-tianmei-jingpin',
+    // 女性基础音色
+    femaleShaonv: { desc: '少女音色', value: 'female-shaonv' },
+    femaleYujie: { desc: '御姐音色', value: 'female-yujie' },
+    femaleChengshu: { desc: '成熟女性音色', value: 'female-chengshu' },
+    femaleTianmei: { desc: '甜美女性音色', value: 'female-tianmei' },
 
-    // 特殊角色
-    CleverBoy = 'clever_boy',
-    CuteBoy = 'cute_boy',
-    LovelyGirl = 'lovely_girl',
-    CartoonPig = 'cartoon_pig',
-    SicklyYoungerBrother = 'bingjiao_didi',
-    HandsomeBoyfriend = 'junlang_nanyou',
-    InnocentJunior = 'chunzhen_xuedi',
-    ColdSenior = 'lengdan_xiongzhang',
-    DomineeringYoungMaster = 'badao_shaoye',
-    SweetXiaoling = 'tianxin_xiaoling',
-    PlayfulCutie = 'qiaopi_mengmei',
-    CharmingMatureSister = 'wumei_yujie',
-    CoquettishJuniorSister = 'diadia_xuemei',
-    ElegantSeniorSister = 'danya_xuejie',
+    // 主持人系列
+    presenterMale: { desc: '男性主持人', value: 'presenter_male' },
+    presenterFemale: { desc: '女性主持人', value: 'presenter_female' },
+
+    // 有声书系列
+    audiobookMale1: { desc: '男性有声书1', value: 'audiobook_male_1' },
+    audiobookMale2: { desc: '男性有声书2', value: 'audiobook_male_2' },
+    audiobookFemale1: { desc: '女性有声书1', value: 'audiobook_female_1' },
+    audiobookFemale2: { desc: '女性有声书2', value: 'audiobook_female_2' },
+
+    // 精品Beta音色
+    maleQnQingseBeta: { desc: '青涩青年音色-beta', value: 'male-qn-qingse-jingpin' },
+    maleQnJingyingBeta: { desc: '精英青年音色-beta', value: 'male-qn-jingying-jingpin' }, // good
+    maleQnBadaoBeta: { desc: '霸道青年音色-beta', value: 'male-qn-badao-jingpin' },
+    maleQnDaxueshengBeta: { desc: '青年大学生音色-beta', value: 'male-qn-daxuesheng-jingpin' },
+    femaleShaonvBeta: { desc: '少女音色-beta', value: 'female-shaonv-jingpin' },
+    femaleYujieBeta: { desc: '御姐音色-beta', value: 'female-yujie-jingpin' },
+    femaleChengshuBeta: { desc: '成熟女性音色-beta', value: 'female-chengshu-jingpin' },
+    femaleTianmeiBeta: { desc: '甜美女性音色-beta', value: 'female-tianmei-jingpin' },
+
+    // 特色角色音色
+    cleverBoy: { desc: '聪明男童', value: 'clever_boy' },
+    cuteBoy: { desc: '可爱男童', value: 'cute_boy' },
+    lovelyGirl: { desc: '萌萌女童', value: 'lovely_girl' },
+    cartoonPig: { desc: '卡通猪小琪', value: 'cartoon_pig' },
+    bingjiaoDidi: { desc: '病娇弟弟', value: 'bingjiao_didi' },
+    junlangNanyou: { desc: '俊朗男友', value: 'junlang_nanyou' },
+    chunzhenXuedi: { desc: '纯真学弟', value: 'chunzhen_xuedi' },
+    lengdanXiongzhang: { desc: '冷淡学长', value: 'lengdan_xiongzhang' },
+    badaoShaoye: { desc: '霸道少爷', value: 'badao_shaoye' },
+    tianxinXiaoling: { desc: '甜心小玲', value: 'tianxin_xiaoling' }, // good
+    qiaopiMengmei: { desc: '俏皮萌妹', value: 'qiaopi_mengmei' },
+    wumeiYujie: { desc: '妩媚御姐', value: 'wumei_yujie' },
+    diadiaXuemei: { desc: '嗲嗲学妹', value: 'diadia_xuemei' },
+    danyaXuejie: { desc: '淡雅学姐', value: 'danya_xuejie' },
+
+    santaClaus: { desc: 'Santa Claus', value: 'Santa_Claus' },
+    grinch: { desc: 'Grinch', value: 'Grinch' },
+    rudolph: { desc: 'Rudolph', value: 'Rudolph' },
+    arnold: { desc: 'Arnold', value: 'Arnold' },
+    charmingSanta: { desc: 'Charming Santa', value: 'Charming_Santa' },
+    charmingLady: { desc: 'Charming Lady', value: 'Charming_Lady' },
+    sweetGirl: { desc: 'Sweet Girl', value: 'Sweet_Girl' },
+    cuteElf: { desc: 'Cute Elf', value: 'Cute_Elf' },
+    attractiveGirl: { desc: 'Attractive Girl', value: 'Attractive_Girl' }, // good
+    sereneWoman: { desc: 'Serene Woman', value: 'Serene_Woman' },
+} as const
+
+// 类型增强
+export type VoicePresetValues = (typeof voicePresets)[keyof typeof voicePresets]['value']
+
+export const enum GeneratingSatus {
+    // 对话生成中
+    DialogueGenerating = `对话生成中`,
+    // 对话摘取中
+    DialogueExtracting = `对话摘取中`,
+    // 正在请求音频
+    AudioRequesting = `正在请求音频`,
+    // 音频合成正在合成
+    AudioSynthesizing = `正在合成音频`,
 }
 
 // podcast generating prompt
