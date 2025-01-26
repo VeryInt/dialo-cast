@@ -81,7 +81,7 @@ export const createMainStore = (initState: MainState = defaultInitState) => {
                             audioPlayFile: String(file ?? '').trim(),
                             isGenerating: false,
                             isloading: true,
-                            castTopic: '',
+                            // castTopic: '',
                         }
                     } else {
                         return {

@@ -9,13 +9,16 @@ import {
     PODCAST_JSON_SCHEMA,
 } from '../shared/constants'
 import _ from 'lodash'
-import { extractDailyInfo } from '../shared/utils'
+import { extractDailyInfo, extractJsonArrayFromText, extractJsonArrayFromObject } from '../shared/utils'
 import { getConfig } from '../main/electronStore'
 let openaiInstance: OpenAI | null = null
 
 const handlers = {
     // 根据topic生成对话
-    fetchDialogue: async (event, { topic, apiKey }: { topic: string; apiKey?: string }) => {
+    fetchDialogue: async (
+        event,
+        { topic, apiKey, requestJson }: { topic: string; apiKey?: string; requestJson?: boolean }
+    ) => {
         try {
             const openai = getOpenAI(
                 apiKey || (getConfig(CONFIG_STORE_KEYS.miniMaxApiKey) as string) || process.env.MIN_MAX_API_KEY
@@ -24,21 +27,22 @@ const handlers = {
                 { role: 'system', content: PODCAST_EXPERT_PROMPT },
                 { role: 'user', content: topic },
             ]
-            const completion = await openai.chat.completions.create({
-                messages: messages,
-                model: `MiniMax-Text-01`, //`deepseek-chat`, // `deepseek-reasoner`,
-            })
-            // console.log(`🐹🐹🐹 start fetchDialogue`)
-            // const completion = await openai.beta.chat.completions.parse({
-            //     messages: messages,
-            //     model: `MiniMax-Text-01`, //`deepseek-chat`, // `deepseek-reasoner`,
-            //     response_format: { "type": "json_schema", "json_schema": PODCAST_JSON_SCHEMA }
-            // })
-            // console.log(`fetchDialogue`, completion.choices[0].message)
-            // const event = completion.choices[0].message?.parsed;
-            // console.log(`🐹🐹🐹 fetchDialogue event`, event)
-            // return event
-            return completion?.choices[0]?.message?.content
+            if (requestJson) {
+                console.log(`🐹🐹🐹 start fetchDialogue`)
+                const completion = await openai.beta.chat.completions.parse({
+                    messages: messages,
+                    model: `MiniMax-Text-01`, //`deepseek-chat`, // `deepseek-reasoner`,
+                    response_format: { type: 'json_schema', json_schema: PODCAST_JSON_SCHEMA },
+                })
+                const event = completion.choices[0].message?.parsed
+                return { dialogueList: extractJsonArrayFromObject(event) }
+            } else {
+                const completion = await openai.chat.completions.create({
+                    messages: messages,
+                    model: `MiniMax-Text-01`, //`deepseek-chat`, // `deepseek-reasoner`,
+                })
+                return { dialogueList: extractJsonArrayFromText(completion?.choices[0]?.message?.content) }
+            }
         } catch (error) {
             console.log('Error fetching dialogue:', error)
             throw new Error('Failed to fetch dialogue')
@@ -50,8 +54,8 @@ const handlers = {
         event,
         { content, emotion, voiceID }: { content: string; emotion?: string; voiceID?: VoicePresetValues }
     ) => {
-        const apiKey = (getConfig(CONFIG_STORE_KEYS.miniMaxApiKey) as string) || ``
-        const groundID = (getConfig(CONFIG_STORE_KEYS.miniMaxGroupID) as string) || ``
+        const apiKey = (getConfig(CONFIG_STORE_KEYS.miniMaxApiKey) as string) || process.env.MIN_MAX_API_KEY || ``
+        const groundID = (getConfig(CONFIG_STORE_KEYS.miniMaxGroupID) as string) || process.env.MIN_MAX_GROUND_ID || ``
         const url = `https://api.minimax.chat/v1/t2a_v2?GroupId=${groundID}`
         console.log(`🐹🐹🐹fetchMinMaxAudio start`, content, emotion, voiceID)
         try {
@@ -65,7 +69,7 @@ const handlers = {
                 stream: false,
                 voice_setting: {
                     voice_id: voiceID || voicePresets.badaoShaoye.value,
-                    speed: 1,
+                    speed: 1.25, // 语速
                     vol: 1.5, // 音量
                     pitch: -1, // 声调
                 },
@@ -85,7 +89,12 @@ const handlers = {
                 body: JSON.stringify(body),
             })
             const response = await result.json()
-            console.log(`🐹🐹🐹fetchMinMaxAudio get result`, response?.data?.audio?.length, content)
+            console.log(
+                `🐹🐹🐹fetchMinMaxAudio get result`,
+                response?.data?.audio?.status,
+                response?.data?.audio?.length,
+                content
+            )
             return response?.data?.audio
         } catch (e) {}
         return null

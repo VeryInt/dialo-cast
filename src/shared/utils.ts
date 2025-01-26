@@ -27,6 +27,14 @@ export const extractJsonArrayFromText = (text: string): Record<string, any>[] | 
     return jsonArray
 }
 
+export const extractJsonArrayFromObject = (obj: Record<string, any>): Record<string, any>[] | null => {
+    let jsonArray = []
+    const { podcast_dialogue } = obj || {}
+    const { dialogue, title } = podcast_dialogue || {}
+    jsonArray = dialogue || []
+    return jsonArray
+}
+
 /**
  * 顺序执行异步任务队列
  * @param tasks 返回 Promise 的任务数组

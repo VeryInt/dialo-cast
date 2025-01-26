@@ -8,12 +8,13 @@ interface DialogDisplayProps {
         content: string
         emotion?: string
     }[]
+    className?: string
 }
 
-export default function DialogDisplay({ conversationList }: DialogDisplayProps) {
+export default function DialogDisplay({ conversationList, className }: DialogDisplayProps) {
     if (_.isEmpty(conversationList)) return null
     return (
-        <div className="space-y-2">
+        <div className={` space-y-3 ${className || ''}`}>
             {_.map(conversationList, (conversation, index) => {
                 const { host, content, emotion } = conversation || {}
                 const emotionText =

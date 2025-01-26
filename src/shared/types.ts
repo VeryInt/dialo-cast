@@ -14,7 +14,7 @@ export interface ElectronAPI {
     openLink: (link: string) => Promise<void>
     getConfig: (key: string) => Promise<ConfigValue>
     saveConfig: (key: string, value: ConfigValue) => Promise<void>
-    fetchDialogue: ({ topic }: { topic: string }) => Promise<string>
+    fetchDialogue: ({ topic, requestJson }: { topic: string; requestJson?: boolean }) => Promise<Record<string, any>>
     fetchProductDailyList: ({ productID }: { productID: number }) => Promise<string>
     fetchMinMaxAudio: ({
         content,

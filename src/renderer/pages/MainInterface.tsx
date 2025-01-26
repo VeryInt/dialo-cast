@@ -14,34 +14,88 @@ import { useMainStore } from '../providers'
 import { electronServices } from '../../services'
 import { extractJsonArrayFromText, constsequentialAsyncCalls, formatPlayTime, fetchAll } from '../../shared/utils'
 import { AUDIO_GAP_TEXT, voicePresets, GeneratingSatus, CONFIG_STORE_KEYS } from '../../shared/constants'
+import DialogDisplay from '../components/DialogDisplay'
 
 import _ from 'lodash'
-
+const demoDialogue = [
+    {
+        emotion: 'neutral',
+        host: 'Mike',
+        content: '大家好，欢迎收听我们的经济展望节目。我是Mike，今天我们将用一分钟的时间快速回顾一下当前的经济形势',
+    },
+    {
+        emotion: 'neutral',
+        host: 'Jessica',
+        content: '大家好，我是Jessica。<#0.5#>当前全球经济正面临多重挑战，包括通货膨胀、供应链问题和地缘政治紧张局势',
+    },
+    {
+        emotion: 'neutral',
+        host: 'Mike',
+        content: '首先，我们来看看通货膨胀的情况。<#0.5#>根据最新数据，全球主要经济体的通胀率仍然处于高位',
+    },
+    {
+        emotion: 'neutral',
+        host: 'Jessica',
+        content: '是的，Mike。<#0.5#>美国和欧元区的通胀率都超过了预期，这给各国央行带来了巨大的加息压力',
+    },
+    {
+        emotion: 'neutral',
+        host: 'Mike',
+        content: '不过值得注意的是，<#0.5#>尽管通胀率居高不下，但一些经济学家认为这可能是暂时的',
+    },
+    {
+        emotion: 'neutral',
+        host: 'Jessica',
+        content: '确实如此。<#0.5#>供应链问题正在逐步缓解，这可能会在未来几个月对物价产生积极影响',
+    },
+    {
+        emotion: 'neutral',
+        host: 'Mike',
+        content: '接下来，我们来看看地缘政治的影响。<#0.5#>俄乌冲突对全球能源市场和粮食供应造成了显著冲击',
+    },
+    {
+        emotion: 'neutral',
+        host: 'Jessica',
+        content: '没错。<#0.5#>能源价格上涨不仅影响了消费者，也对工业生产造成了压力',
+    },
+]
 export default function MainInterface() {
     const state = useMainStore(state => state)
+    const [dialogueList, setDialogueList] = useState<any[]>(demoDialogue)
     const { audioPlayFile } = state || {}
     const [activeTab, setActiveTab] = useState('topicCast')
     return (
         <div className="flex w-full flex-col gap-6 max-w-6xl mx-auto min-w-lg">
             <div className="">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 gap-2">
-                        <TabsTrigger value="topicCast" className="flex items-center cursor-pointer">
+                    <TabsList className="grid w-full grid-cols-2 gap-2 bg-gray-100">
+                        <TabsTrigger
+                            value="topicCast"
+                            className="flex items-center cursor-pointer data-[state=active]:bg-gray-600 data-[state=active]:text-white"
+                        >
                             主题播客
                         </TabsTrigger>
-                        <TabsTrigger value="productItinerary" className="flex items-center cursor-pointer">
+                        <TabsTrigger
+                            value="productItinerary"
+                            className="flex items-center cursor-pointer data-[state=active]:bg-gray-600 data-[state=active]:text-white"
+                        >
                             产品行程
                         </TabsTrigger>
                     </TabsList>
                     <TabsContent value="topicCast">
-                        <PodcastGenerator />
+                        <PodcastGenerator callback={setDialogueList} />
                     </TabsContent>
                     <TabsContent value="productItinerary">
-                        <ProductCastGenerator />
+                        <ProductCastGenerator callback={setDialogueList} />
                     </TabsContent>
                 </Tabs>
             </div>
             <AudioPlayer audioFileName={audioPlayFile} />
+            {dialogueList?.length ? (
+                <div className="border-gray-100 bg-white rounded-2xl shadow-xl py-8 w-full mx-auto text-sm ">
+                    <DialogDisplay conversationList={dialogueList} className="max-h-[28rem] overflow-y-auto mx-6" />
+                </div>
+            ) : null}
         </div>
     )
 }
@@ -117,7 +171,7 @@ const VoiceSelection = ({ className }: { className?: string }) => {
     )
 }
 
-const ProductCastGenerator = () => {
+const ProductCastGenerator = ({ callback }: { callback?: (dialogueList: Record<string, any>[]) => void }) => {
     const state = useMainStore(state => state)
     const [generatingStatus, setGeneratingStatus] = useState(GeneratingSatus.DialogueGenerating)
     const topicRef = useRef(null)
@@ -134,10 +188,11 @@ const ProductCastGenerator = () => {
         const producItinerary = await electronServices.fetchProductDailyList({ productID: Number(castProductID) })
         console.log(`producItinerary`, producItinerary)
         setGeneratingStatus(GeneratingSatus.DialogueGenerating)
-        const dialogue = await electronServices.fetchDialogue({ topic: producItinerary })
+        const dialogue = await electronServices.fetchDialogue({ topic: producItinerary, requestJson: false })
         setGeneratingStatus(GeneratingSatus.DialogueExtracting)
-        let dialogueList = extractJsonArrayFromText(dialogue)
+        const { dialogueList } = dialogue || {}
         if (dialogueList?.length) {
+            callback && callback(dialogueList)
             setGeneratingStatus(GeneratingSatus.AudioRequesting)
             const fetchResults = await fetchMinMaxAudioBatch(dialogueList)
 
@@ -184,7 +239,7 @@ const ProductCastGenerator = () => {
     )
 }
 
-const PodcastGenerator = () => {
+const PodcastGenerator = ({ callback }: { callback?: (dialogueList: Record<string, any>[]) => void }) => {
     const state = useMainStore(state => state)
     const [generatingStatus, setGeneratingStatus] = useState(GeneratingSatus.DialogueGenerating)
     const topicRef = useRef(null)
@@ -196,11 +251,11 @@ const PodcastGenerator = () => {
         console.log(`topic`, castTopic)
         updateIsGenerating(true)
         setGeneratingStatus(GeneratingSatus.DialogueGenerating)
-        const dialogue = await electronServices.fetchDialogue({ topic: castTopic })
-        console.log(dialogue)
+        const dialogue = await electronServices.fetchDialogue({ topic: castTopic, requestJson: false })
+        const { dialogueList } = dialogue || {}
         setGeneratingStatus(GeneratingSatus.DialogueExtracting)
-        let dialogueList = extractJsonArrayFromText(dialogue)
         if (dialogueList?.length) {
+            callback && callback(dialogueList)
             setGeneratingStatus(GeneratingSatus.AudioRequesting)
             // const fetchList = _.compact(
             //     _.map(dialogueList, (dialogueItem, dialogueIndex) => {
@@ -386,10 +441,10 @@ const AudioPlayer = ({ audioFileName }: { audioFileName: string }) => {
     return (
         <>
             <Card className=" border-gray-100 shadow-xl p-6 w-full mx-auto">
-                <CardHeader>
+                <CardHeader className="pt-0">
                     <CardTitle>播客播放器</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 pb-0">
                     <div className="text-lg font-medium">{``}</div>
                     <div className="flex justify-center items-center space-x-4 relative">
                         <SkipBack className="w-6 h-6 cursor-pointer" />
@@ -408,22 +463,22 @@ const AudioPlayer = ({ audioFileName }: { audioFileName: string }) => {
                         // className="w-full"
                         onValueChange={([value]) => handleMoveTime(value)}
                     />
-                    <div className="flex justify-between text-sm">
+                    <div className="flex justify-between text-sm mb-0">
                         <span>{timeDisplay}</span>
                         <span>{totalTime}</span>
                     </div>
+                    <div className="hidden">
+                        <a ref={downloadRef} download="filename.mp3" className="hidden"></a>
+                        <audio
+                            ref={audioRef}
+                            onTimeUpdate={handleTimeUpdate}
+                            onCanPlay={handleCanPlay}
+                            onLoadedMetadata={handleLoadedMetadata}
+                            className="w-full bg-transparent "
+                        />
+                    </div>
                 </CardContent>
             </Card>
-            <div className="">
-                <a ref={downloadRef} download="filename.mp3" className="hidden"></a>
-                <audio
-                    ref={audioRef}
-                    onTimeUpdate={handleTimeUpdate}
-                    onCanPlay={handleCanPlay}
-                    onLoadedMetadata={handleLoadedMetadata}
-                    className="w-full bg-transparent "
-                />
-            </div>
         </>
     )
 }

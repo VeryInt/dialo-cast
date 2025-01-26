@@ -95,11 +95,17 @@
 }
 
 #root {
-    height: 100vh;
+    height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    overflow-y: scroll;
+    background-color: var(--color-gray-300)
+}
+
+html, body{
+    height: 100%;
 }
 
 input:focus, input:focus-visible, button:focus, button:focus-visible {
