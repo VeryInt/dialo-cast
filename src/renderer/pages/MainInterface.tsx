@@ -61,11 +61,11 @@ const demoDialogue = [
 ]
 export default function MainInterface() {
     const state = useMainStore(state => state)
-    const [dialogueList, setDialogueList] = useState<any[]>(demoDialogue)
+    const [dialogueList, setDialogueList] = useState<any[]>([])
     const { audioPlayFile } = state || {}
     const [activeTab, setActiveTab] = useState('topicCast')
     return (
-        <div className="flex w-full flex-col gap-6 max-w-6xl mx-auto min-w-lg">
+        <div className="flex w-full flex-col gap-6 max-w-3xl mx-auto min-w-md">
             <div className="">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                     <TabsList className="grid w-full grid-cols-2 gap-2 bg-gray-100">
@@ -92,7 +92,7 @@ export default function MainInterface() {
             </div>
             <AudioPlayer audioFileName={audioPlayFile} />
             {dialogueList?.length ? (
-                <div className="border-gray-100 bg-white rounded-2xl shadow-xl py-8 w-full mx-auto text-sm ">
+                <div className="border-gray-100 bg-white rounded-2xl shadow-xl py-8 w-full mx-auto text-sm">
                     <DialogDisplay conversationList={dialogueList} className="max-h-[28rem] overflow-y-auto mx-6" />
                 </div>
             ) : null}
@@ -177,7 +177,8 @@ const ProductCastGenerator = ({ callback }: { callback?: (dialogueList: Record<s
     const topicRef = useRef(null)
     const { castProductID, isGenerating, updateCastProductID, updateIsGenerating, updateAudioPlayFile } = state || {}
     const handleUpdateProductID = productID => {
-        updateCastProductID(String(productID || '').trim())
+        const productIDNumber = (productID ? productID.match(/\d+/g)?.[0] : '') || ''
+        updateCastProductID(String(productIDNumber).trim())
     }
 
     const handleGenerateProduct = async () => {

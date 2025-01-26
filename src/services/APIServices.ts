@@ -19,6 +19,7 @@ const handlers = {
         event,
         { topic, apiKey, requestJson }: { topic: string; apiKey?: string; requestJson?: boolean }
     ) => {
+        const modelName = `MiniMax-Text-01` // `abab6.5s-chat` // MiniMax-Text-01`, //`deepseek-chat`, // `deepseek-reasoner`,
         try {
             const openai = getOpenAI(
                 apiKey || (getConfig(CONFIG_STORE_KEYS.miniMaxApiKey) as string) || process.env.MIN_MAX_API_KEY
@@ -31,7 +32,8 @@ const handlers = {
                 console.log(`🐹🐹🐹 start fetchDialogue`)
                 const completion = await openai.beta.chat.completions.parse({
                     messages: messages,
-                    model: `MiniMax-Text-01`, //`deepseek-chat`, // `deepseek-reasoner`,
+                    model: modelName,
+                    max_tokens: 30720,
                     response_format: { type: 'json_schema', json_schema: PODCAST_JSON_SCHEMA },
                 })
                 const event = completion.choices[0].message?.parsed
@@ -39,8 +41,10 @@ const handlers = {
             } else {
                 const completion = await openai.chat.completions.create({
                     messages: messages,
-                    model: `MiniMax-Text-01`, //`deepseek-chat`, // `deepseek-reasoner`,
+                    model: modelName,
+                    max_tokens: 30720,
                 })
+                console.log(`🐹🐹🐹 completion?.choices[0]?.message?.content`, completion?.choices[0]?.message?.content)
                 return { dialogueList: extractJsonArrayFromText(completion?.choices[0]?.message?.content) }
             }
         } catch (error) {
@@ -69,8 +73,8 @@ const handlers = {
                 stream: false,
                 voice_setting: {
                     voice_id: voiceID || voicePresets.badaoShaoye.value,
-                    speed: 1.25, // 语速
-                    vol: 1.5, // 音量
+                    speed: 1.15, // 语速
+                    vol: 2, // 音量
                     pitch: -1, // 声调
                 },
                 audio_setting: {

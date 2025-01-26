@@ -24,7 +24,7 @@ const Main = () => {
                 <Sidebar />
             </div>
             <div className="flex-1 p-10">
-                <div className="flex flex-col min-w-xl w-full">
+                <div className="flex flex-col min-w-lg w-full">
                     {currentPage == 'main' && <MainInterface />}
                     {currentPage == 'settings' && <Settings />}
                 </div>
