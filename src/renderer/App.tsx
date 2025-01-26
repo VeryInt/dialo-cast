@@ -10,13 +10,6 @@ import Sidebar from './components/SideBar'
 const Main = () => {
     const state = useMainStore(state => state)
     const { currentPage } = state || {}
-    useEffect(() => {
-        setTimeout(() => {
-            electronServices.getConfig('audioInfo').then(result => {
-                console.log(result)
-            })
-        }, 2000)
-    })
 
     return (
         <div className="flex flex-row w-full h-full bg-gray-300 min-w-fit">

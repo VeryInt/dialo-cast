@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, HtmlHTMLAttributes } from 'react'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card'
 import { Textarea } from '../components/ui/textarea'
 import { Progress } from '../components/ui/progress'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs'
@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Loader2, Play, Pause, SkipBack, SkipForward, Edit2, ChevronDown, ChevronUp, Download } from 'lucide-react'
 import { useMainStore } from '../providers'
 import { electronServices } from '../../services'
+import { Switch } from '../components/ui/switch'
 import { extractJsonArrayFromText, constsequentialAsyncCalls, formatPlayTime, fetchAll } from '../../shared/utils'
 import { AUDIO_GAP_TEXT, voicePresets, GeneratingSatus, CONFIG_STORE_KEYS } from '../../shared/constants'
 import DialogDisplay from '../components/DialogDisplay'
@@ -173,6 +174,7 @@ const VoiceSelection = ({ className }: { className?: string }) => {
 
 const ProductCastGenerator = ({ callback }: { callback?: (dialogueList: Record<string, any>[]) => void }) => {
     const state = useMainStore(state => state)
+    const [isEnglish, setIsEnglish] = useState(false)
     const [generatingStatus, setGeneratingStatus] = useState(GeneratingSatus.DialogueGenerating)
     const topicRef = useRef(null)
     const { castProductID, isGenerating, updateCastProductID, updateIsGenerating, updateAudioPlayFile } = state || {}
@@ -206,11 +208,30 @@ const ProductCastGenerator = ({ callback }: { callback?: (dialogueList: Record<s
         updateIsGenerating(false)
     }
 
+    const handleChagneLanguage = isEnglish => {
+        setIsEnglish(isEnglish)
+        electronServices.saveConfig(CONFIG_STORE_KEYS.englishDialog, isEnglish)
+    }
+
+    useEffect(() => {
+        electronServices.getConfig(CONFIG_STORE_KEYS.englishDialog).then((isEnglish: boolean) => {
+            setIsEnglish(!!isEnglish)
+        })
+    }, [])
+
     return (
         <>
             <Card className=" border-gray-100 shadow-xl p-6 w-full mx-auto">
                 <CardHeader className="pt-0">
-                    <CardTitle>生成行程讨论</CardTitle>
+                    <CardTitle>
+                        <div className="flex flex-row justify-between">
+                            <span>生成行程讨论</span>
+                            <div className="grid grid-cols-2 gap-1 text-[14px] items-center">
+                                <span className="text-end">En</span>
+                                <Switch checked={isEnglish} onCheckedChange={handleChagneLanguage} />
+                            </div>
+                        </div>
+                    </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 pb-0">
                     <Input
@@ -243,6 +264,7 @@ const ProductCastGenerator = ({ callback }: { callback?: (dialogueList: Record<s
 const PodcastGenerator = ({ callback }: { callback?: (dialogueList: Record<string, any>[]) => void }) => {
     const state = useMainStore(state => state)
     const [generatingStatus, setGeneratingStatus] = useState(GeneratingSatus.DialogueGenerating)
+    const [isEnglish, setIsEnglish] = useState(false)
     const topicRef = useRef(null)
     const { castTopic, isGenerating, updateCastTopic, updateIsGenerating, updateAudioPlayFile } = state || {}
     const handleUpdateTopic = topic => {
@@ -253,6 +275,7 @@ const PodcastGenerator = ({ callback }: { callback?: (dialogueList: Record<strin
         updateIsGenerating(true)
         setGeneratingStatus(GeneratingSatus.DialogueGenerating)
         const dialogue = await electronServices.fetchDialogue({ topic: castTopic, requestJson: false })
+        console.log(`dialogue`, dialogue)
         const { dialogueList } = dialogue || {}
         setGeneratingStatus(GeneratingSatus.DialogueExtracting)
         if (dialogueList?.length) {
@@ -310,11 +333,30 @@ const PodcastGenerator = ({ callback }: { callback?: (dialogueList: Record<strin
         updateIsGenerating(false)
     }
 
+    const handleChagneLanguage = isEnglish => {
+        setIsEnglish(isEnglish)
+        electronServices.saveConfig(CONFIG_STORE_KEYS.englishDialog, isEnglish)
+    }
+
+    useEffect(() => {
+        electronServices.getConfig(CONFIG_STORE_KEYS.englishDialog).then((isEnglish: boolean) => {
+            setIsEnglish(!!isEnglish)
+        })
+    }, [])
+
     return (
         <>
             <Card className=" border-gray-100 shadow-xl p-6 w-full mx-auto">
                 <CardHeader className="pt-0">
-                    <CardTitle>生成新播客</CardTitle>
+                    <CardTitle>
+                        <div className="flex flex-row justify-between">
+                            <span>生成新播客</span>
+                            <div className="grid grid-cols-2 gap-1 text-[14px] items-center">
+                                <span className="text-end">En</span>
+                                <Switch checked={isEnglish} onCheckedChange={handleChagneLanguage} />
+                            </div>
+                        </div>
+                    </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 pb-0">
                     <Input

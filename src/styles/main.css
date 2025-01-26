@@ -108,6 +108,25 @@ html, body{
     height: 100%;
 }
 
+/* 隐藏所有滚动条但保留滚动功能 */
+html {
+    overflow: -moz-scrollbars-none;  /* Firefox */
+    scrollbar-width: none;           /* Firefox 64+ */
+    -ms-overflow-style: none;        /* IE/Edge */
+}
+
+/* WebKit 内核浏览器 */
+html::-webkit-scrollbar {
+    width: 0 !important;
+    height: 0 !important;
+    display: none;
+}
+
+body {
+    overflow: hidden;  /* 确保无滚动条 */
+    -webkit-overflow-scrolling: touch;  /* 保持iOS惯性滚动 */
+}
+
 input:focus, input:focus-visible, button:focus, button:focus-visible {
     outline: none;
     --tw-ring-shadow: none;
