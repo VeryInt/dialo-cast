@@ -1,6 +1,7 @@
 import _ from 'lodash'
 import sanitizeHtml from 'sanitize-html'
 
+// 通用延迟方法
 export const sleep = (seconds: number) => {
     return new Promise(resolve => {
         setTimeout(resolve, seconds * 1000)
@@ -26,16 +27,13 @@ export const extractJsonArrayFromText = (text: string): Record<string, any>[] | 
     return jsonArray
 }
 
-// 通用延迟方法
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
-
 /**
  * 顺序执行异步任务队列
  * @param tasks 返回 Promise 的任务数组
- * @param gapMs 任务之间的间隔时间（毫秒）
+ * @param gapS 任务之间的间隔时间（秒）
  * @returns 按顺序返回所有结果的 Promise
  */
-export const constsequentialAsyncCalls = async <T>(tasks: (() => Promise<T>)[], gapMs: number = 0) => {
+export const constsequentialAsyncCalls = async <T>(tasks: (() => Promise<T>)[], gapS: number = 0) => {
     const results: T[] = []
 
     for (const task of tasks) {
@@ -44,12 +42,31 @@ export const constsequentialAsyncCalls = async <T>(tasks: (() => Promise<T>)[], 
         results.push(result)
 
         // 添加间隔等待（最后一个任务后不等待）
-        if (gapMs > 0 && tasks.indexOf(task) !== tasks.length - 1) {
-            await delay(gapMs)
+        if (gapS > 0 && tasks.indexOf(task) !== tasks.length - 1) {
+            await sleep(gapS)
         }
     }
 
     return results
+}
+
+/**
+ * 自定义的 "延迟执行版" Promise.all
+ * @param {Array<() => Promise<any>>} functionsArray - 返回 Promise 的函数数组
+ * @returns {Promise<any[]>} - 所有 Promise 完成后的结果数组
+ */
+export const fetchAll = functionsArray => {
+    // 1. 遍历函数数组，依次执行每个函数以生成 Promise
+    const promises = _.map(functionsArray, fn => {
+        if (typeof fn !== 'function') {
+            // 如果数组元素不是函数，抛出错误（或返回一个拒绝的 Promise）
+            throw new Error('PromiseAllNew 要求数组元素为返回 Promise 的函数')
+        }
+        return fn() // 执行函数，启动异步操作
+    })
+
+    // 2. 使用原生 Promise.all 监听所有生成的 Promise
+    return Promise.all(promises)
 }
 
 export const formatPlayTime = (playTime: number): string => {

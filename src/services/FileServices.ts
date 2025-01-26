@@ -40,6 +40,7 @@ const handlers = {
 
             audioInfo.push(newAudioInfo)
             saveConfig('audioInfo', JSON.stringify(audioInfo))
+            console.log(`🐹🐹🐹Saved audio file: ${filePath}`)
             return { success: true, ...newAudioInfo }
         } catch (error) {
             console.log('Error saving audio file:', error)

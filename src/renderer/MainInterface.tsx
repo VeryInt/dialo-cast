@@ -11,7 +11,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './component
 import { Loader2, Play, Pause, SkipBack, SkipForward, Edit2, ChevronDown, ChevronUp, Download } from 'lucide-react'
 import { useMainStore } from './providers'
 import { electronServices } from '../services'
-import { extractJsonArrayFromText, constsequentialAsyncCalls, formatPlayTime } from '../shared/utils'
+import { extractJsonArrayFromText, constsequentialAsyncCalls, formatPlayTime, fetchAll } from '../shared/utils'
 import { AUDIO_GAP_TEXT, VoicePresetValues, voicePresets, GeneratingSatus } from '../shared/constants'
 import _ from 'lodash'
 
@@ -65,25 +65,8 @@ export const ProductCastGenerator = () => {
         setGeneratingStatus(GeneratingSatus.DialogueExtracting)
         let dialogueList = extractJsonArrayFromText(dialogue)
         if (dialogueList?.length) {
-            const fetchList = _.compact(
-                _.map(dialogueList, (dialogueItem, dialogueIndex) => {
-                    const { content, emotion, host } = dialogueItem || {}
-                    if (content) {
-                        return electronServices.fetchMinMaxAudio({
-                            content: `${dialogueIndex == 0 ? AUDIO_GAP_TEXT : ''}${content}${AUDIO_GAP_TEXT}`,
-                            emotion: emotion,
-                            voiceID:
-                                host == `Mike`
-                                    ? voicePresets.maleQnJingyingBeta.value
-                                    : voicePresets.attractiveGirl.value,
-                        })
-                    }
-                    return null
-                })
-            )
             setGeneratingStatus(GeneratingSatus.AudioRequesting)
-            // const  fetchResults = await constsequentialAsyncCalls(fetchList)
-            const fetchResults = await Promise.all(fetchList)
+            const fetchResults = await fetchMinMaxAudioBatch(dialogueList)
 
             // 直接通过合并 hex 生成
             const now = Date.now()
@@ -143,25 +126,25 @@ export const PodcastGenerator = () => {
         setGeneratingStatus(GeneratingSatus.DialogueExtracting)
         let dialogueList = extractJsonArrayFromText(dialogue)
         if (dialogueList?.length) {
-            const fetchList = _.compact(
-                _.map(dialogueList, (dialogueItem, dialogueIndex) => {
-                    const { content, emotion, host } = dialogueItem || {}
-                    if (content) {
-                        return electronServices.fetchMinMaxAudio({
-                            content: `${dialogueIndex == 0 ? AUDIO_GAP_TEXT : ''}${content}${AUDIO_GAP_TEXT}`,
-                            emotion: emotion,
-                            voiceID:
-                                host == `Mike`
-                                    ? voicePresets.maleQnJingyingBeta.value
-                                    : voicePresets.attractiveGirl.value,
-                        })
-                    }
-                    return null
-                })
-            )
             setGeneratingStatus(GeneratingSatus.AudioRequesting)
-            // const  fetchResults = await constsequentialAsyncCalls(fetchList)
-            const fetchResults = await Promise.all(fetchList)
+            // const fetchList = _.compact(
+            //     _.map(dialogueList, (dialogueItem, dialogueIndex) => {
+            //         const { content, emotion, host } = dialogueItem || {}
+            //         if (content) {
+            //             return electronServices.fetchMinMaxAudio({
+            //                 content: `${dialogueIndex == 0 ? AUDIO_GAP_TEXT : ''}${content}${AUDIO_GAP_TEXT}`,
+            //                 emotion: emotion,
+            //                 voiceID:
+            //                     host == `Mike`
+            //                         ? voicePresets.maleQnJingyingBeta.value
+            //                         : voicePresets.attractiveGirl.value,
+            //             })
+            //         }
+            //         return null
+            //     })
+            // )
+            // const fetchResults = await Promise.all(fetchList)
+            const fetchResults = await fetchMinMaxAudioBatch(dialogueList)
 
             // 直接通过合并 hex 生成
             const now = Date.now()
@@ -367,4 +350,33 @@ const AudioPlayer = ({ audioFileName }: { audioFileName: string }) => {
             </div>
         </>
     )
+}
+
+// 由于miniMax接口有RPM限制，所以需要分批次请求， 目前RPM限制为 20，保险起见，设置为 10
+const fetchMinMaxAudioBatch = async (dialogueList: Record<string, any>[]) => {
+    // 每一批需要等待上一批全部返回之后才能继续
+    const fetchAwaitList = _.map(_.chunk(dialogueList, 10), chunkItem => {
+        const fetchList = _.compact(
+            _.map(chunkItem, (dialogueItem, dialogueIndex) => {
+                const { content, emotion, host } = dialogueItem || {}
+                if (content) {
+                    return () =>
+                        electronServices.fetchMinMaxAudio({
+                            content: `${dialogueIndex == 0 ? AUDIO_GAP_TEXT : ''}${content}${AUDIO_GAP_TEXT}`,
+                            emotion: emotion,
+                            voiceID:
+                                host == `Mike`
+                                    ? voicePresets.maleQnJingyingBeta.value
+                                    : voicePresets.attractiveGirl.value,
+                        })
+                }
+                return null
+            })
+        )
+
+        return () => fetchAll(fetchList)
+    })
+
+    const results = await constsequentialAsyncCalls(fetchAwaitList, 30)
+    return _.flatten(results)
 }

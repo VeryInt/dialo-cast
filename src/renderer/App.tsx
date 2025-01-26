@@ -9,7 +9,7 @@ const Main = () => {
     useEffect(() => {
         electronServices.saveConfig('test', 'value1111')
         setTimeout(() => {
-            electronServices.getConfig('test').then(result => {
+            electronServices.getConfig('audioInfo').then(result => {
                 console.log(result)
             })
         }, 2000)

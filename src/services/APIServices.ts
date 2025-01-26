@@ -9,16 +9,16 @@ const handlers = {
     // 根据topic生成对话
     fetchDialogue: async (event, { topic, apiKey }: { topic: string; apiKey?: string }) => {
         try {
-            const openai = getOpenAI(apiKey || process.env.DEEPSEEK_API_KEY)
+            const openai = getOpenAI(apiKey || process.env.MIN_MAX_API_KEY)
             const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
                 { role: 'system', content: PODCAST_EXPERT_PROMPT },
                 { role: 'user', content: topic },
             ]
             const completion = await openai.chat.completions.create({
                 messages: messages,
-                model: `deepseek-chat`, // `deepseek-reasoner`,
+                model: `MiniMax-Text-01`, //`deepseek-chat`, // `deepseek-reasoner`,
             })
-            console.log(completion?.choices[0]?.message?.content)
+            console.log(`fetchDialogue`, completion?.choices[0]?.message?.content)
             return completion?.choices[0]?.message?.content
         } catch (error) {
             console.log('Error fetching dialogue:', error)
@@ -31,10 +31,9 @@ const handlers = {
         { content, emotion, voiceID }: { content: string; emotion?: string; voiceID?: VoicePresetValues }
     ) => {
         const apiKey = process.env.MIN_MAX_API_KEY
-        console.log(`apikey is ${apiKey}`)
         const groundID = process.env.MIN_MAX_GROUND_ID
-        console.log(`groundID is ${groundID}`)
         const url = `https://api.minimax.chat/v1/t2a_v2?GroupId=${groundID}`
+        console.log(`🐹🐹🐹fetchMinMaxAudio start`, content, emotion, voiceID)
         try {
             const headers = {
                 Authorization: `Bearer ${apiKey}`,
@@ -67,7 +66,7 @@ const handlers = {
                 body: JSON.stringify(body),
             })
             const response = await result.json()
-            console.log(`response`, typeof response?.data?.audio, response)
+            console.log(`🐹🐹🐹fetchMinMaxAudio get result`, response?.data?.audio?.length, content)
             return response?.data?.audio
         } catch (e) {}
         return null
@@ -126,8 +125,15 @@ const getOpenAI = (apiKey: string) => {
     apiKey = apiKey || ``
 
     if (!openaiInstance) {
+        // // deepseek
+        // openaiInstance = new OpenAI({
+        //     baseURL: 'https://api.deepseek.com',
+        //     apiKey: apiKey,
+        // })
+
+        // minimax
         openaiInstance = new OpenAI({
-            baseURL: 'https://api.deepseek.com',
+            baseURL: 'https://api.minimax.chat/v1',
             apiKey: apiKey,
         })
         return openaiInstance
