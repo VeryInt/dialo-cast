@@ -13,6 +13,7 @@ const APIList: (keyof ElectronAPI)[] = [
     'mergetAudio',
     'readAudioFile',
     'fetchProductDailyList',
+    'openLink',
 ]
 const eventList: (keyof ElectronEvent)[] = ['minimizeToTray']
 

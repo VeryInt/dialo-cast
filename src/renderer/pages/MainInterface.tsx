@@ -1,18 +1,20 @@
 import React, { useState, useRef, useEffect, HtmlHTMLAttributes } from 'react'
-import { Button } from './components/ui/button'
-import { Input } from './components/ui/input'
-import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card'
-import { Textarea } from './components/ui/textarea'
-import { Progress } from './components/ui/progress'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/tabs'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './components/ui/table'
-import { Slider } from './components/ui/slider'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './components/ui/collapsible'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
+import { Textarea } from '../components/ui/textarea'
+import { Progress } from '../components/ui/progress'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table'
+import { Slider } from '../components/ui/slider'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../components/ui/collapsible'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { Loader2, Play, Pause, SkipBack, SkipForward, Edit2, ChevronDown, ChevronUp, Download } from 'lucide-react'
-import { useMainStore } from './providers'
-import { electronServices } from '../services'
-import { extractJsonArrayFromText, constsequentialAsyncCalls, formatPlayTime, fetchAll } from '../shared/utils'
-import { AUDIO_GAP_TEXT, VoicePresetValues, voicePresets, GeneratingSatus } from '../shared/constants'
+import { useMainStore } from '../providers'
+import { electronServices } from '../../services'
+import { extractJsonArrayFromText, constsequentialAsyncCalls, formatPlayTime, fetchAll } from '../../shared/utils'
+import { AUDIO_GAP_TEXT, voicePresets, GeneratingSatus, CONFIG_STORE_KEYS } from '../../shared/constants'
+
 import _ from 'lodash'
 
 export default function MainInterface() {
@@ -20,7 +22,7 @@ export default function MainInterface() {
     const { audioPlayFile } = state || {}
     const [activeTab, setActiveTab] = useState('topicCast')
     return (
-        <div className="flex w-full flex-col gap-6">
+        <div className="flex w-full flex-col gap-6 max-w-6xl mx-auto min-w-lg">
             <div className="">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                     <TabsList className="grid w-full grid-cols-2 gap-2">
@@ -44,21 +46,92 @@ export default function MainInterface() {
     )
 }
 
-export const ProductCastGenerator = () => {
+const VoiceSelection = ({ className }: { className?: string }) => {
+    const state = useMainStore(state => state)
+    const [host1Voice, setHost1Voice] = useState('')
+    const [host2Voice, setHost2Voice] = useState('')
+    useEffect(() => {
+        electronServices.getConfig(CONFIG_STORE_KEYS.hostVoiceOne).then((voice: string) => {
+            setHost1Voice(voice)
+        })
+        electronServices.getConfig(CONFIG_STORE_KEYS.hostVoiceTwo).then((voice: string) => {
+            setHost2Voice(voice)
+        })
+    }, [])
+
+    const handleSetHostVoice = (voiceValue, hostIndex) => {
+        if (hostIndex == 0) {
+            setHost1Voice(voiceValue)
+            electronServices.saveConfig(CONFIG_STORE_KEYS.hostVoiceOne, voiceValue)
+        } else {
+            setHost2Voice(voiceValue)
+            electronServices.saveConfig(CONFIG_STORE_KEYS.hostVoiceTwo, voiceValue)
+        }
+    }
+
+    return (
+        <>
+            <div className={`grid grid-cols-2 gap-4 ${className}`}>
+                <div>
+                    <label htmlFor="host1-voice" className="block text-sm font-medium text-gray-700 mb-1">
+                        主持人 Mike 音色
+                    </label>
+                    <Select value={host1Voice} onValueChange={value => handleSetHostVoice(value, 0)}>
+                        <SelectTrigger id="host1-voice">
+                            <SelectValue placeholder="选择音色" />
+                        </SelectTrigger>
+                        <SelectContent className="border-gray-200">
+                            {_.map(voicePresets, (voiceValue, voicePresetKey) => {
+                                const { desc, value } = voiceValue || {}
+                                return (
+                                    <SelectItem key={value} value={value}>
+                                        {desc}
+                                    </SelectItem>
+                                )
+                            })}
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div>
+                    <label htmlFor="host2-voice" className="block text-sm font-medium text-gray-700 mb-1">
+                        主持人 Jessica 音色
+                    </label>
+                    <Select value={host2Voice} onValueChange={value => handleSetHostVoice(value, 1)}>
+                        <SelectTrigger id="host2-voice">
+                            <SelectValue placeholder="选择音色" />
+                        </SelectTrigger>
+                        <SelectContent className="border-gray-200">
+                            {_.map(voicePresets, (voiceValue, voicePresetKey) => {
+                                const { desc, value } = voiceValue || {}
+                                return (
+                                    <SelectItem key={value} value={value}>
+                                        {desc}
+                                    </SelectItem>
+                                )
+                            })}
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
+        </>
+    )
+}
+
+const ProductCastGenerator = () => {
     const state = useMainStore(state => state)
     const [generatingStatus, setGeneratingStatus] = useState(GeneratingSatus.DialogueGenerating)
     const topicRef = useRef(null)
-    const { castTopic, isGenerating, updateCastTopic, updateIsGenerating, updateAudioPlayFile } = state || {}
-    const handleUpdateTopic = topic => {
-        updateCastTopic(topic)
+    const { castProductID, isGenerating, updateCastProductID, updateIsGenerating, updateAudioPlayFile } = state || {}
+    const handleUpdateProductID = productID => {
+        updateCastProductID(String(productID || '').trim())
     }
 
     const handleGenerateProduct = async () => {
         // fetchProductDailyList
-        console.log(`topic`, castTopic)
+        console.log(`castProductID`, castProductID)
         updateIsGenerating(true)
         setGeneratingStatus(GeneratingSatus.FetchingItinerary)
-        const producItinerary = await electronServices.fetchProductDailyList({ productID: Number(castTopic) })
+        const producItinerary = await electronServices.fetchProductDailyList({ productID: Number(castProductID) })
         console.log(`producItinerary`, producItinerary)
         setGeneratingStatus(GeneratingSatus.DialogueGenerating)
         const dialogue = await electronServices.fetchDialogue({ topic: producItinerary })
@@ -80,20 +153,21 @@ export const ProductCastGenerator = () => {
     return (
         <>
             <Card className=" border-gray-100 shadow-xl p-6 w-full mx-auto">
-                <CardHeader>
+                <CardHeader className="pt-0">
                     <CardTitle>生成行程讨论</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 pb-0">
                     <Input
                         ref={topicRef}
                         placeholder="输入产品ID"
-                        value={castTopic}
-                        onChange={e => handleUpdateTopic(e.target.value)}
+                        value={castProductID}
+                        onChange={e => handleUpdateProductID(e.target.value)}
                     />
+                    <VoiceSelection className="my-5" />
                     <Button
                         onClick={handleGenerateProduct}
-                        disabled={!castTopic || isGenerating}
-                        className={`w-full ${castTopic ? 'cursor-pointer' : ''}`}
+                        disabled={!castProductID || isGenerating}
+                        className={`w-full py-5 ${castProductID ? 'cursor-pointer' : ''}`}
                     >
                         {isGenerating ? (
                             <>
@@ -110,7 +184,7 @@ export const ProductCastGenerator = () => {
     )
 }
 
-export const PodcastGenerator = () => {
+const PodcastGenerator = () => {
     const state = useMainStore(state => state)
     const [generatingStatus, setGeneratingStatus] = useState(GeneratingSatus.DialogueGenerating)
     const topicRef = useRef(null)
@@ -123,6 +197,7 @@ export const PodcastGenerator = () => {
         updateIsGenerating(true)
         setGeneratingStatus(GeneratingSatus.DialogueGenerating)
         const dialogue = await electronServices.fetchDialogue({ topic: castTopic })
+        console.log(dialogue)
         setGeneratingStatus(GeneratingSatus.DialogueExtracting)
         let dialogueList = extractJsonArrayFromText(dialogue)
         if (dialogueList?.length) {
@@ -182,20 +257,21 @@ export const PodcastGenerator = () => {
     return (
         <>
             <Card className=" border-gray-100 shadow-xl p-6 w-full mx-auto">
-                <CardHeader>
+                <CardHeader className="pt-0">
                     <CardTitle>生成新播客</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 pb-0">
                     <Input
                         ref={topicRef}
                         placeholder="输入播客主题"
                         value={castTopic}
                         onChange={e => handleUpdateTopic(e.target.value)}
                     />
+                    <VoiceSelection className="my-5" />
                     <Button
                         onClick={handleGenerate}
                         disabled={!castTopic || isGenerating}
-                        className={`w-full ${castTopic ? 'cursor-pointer' : ''}`}
+                        className={`w-full py-5 ${castTopic ? 'cursor-pointer' : ''}`}
                     >
                         {isGenerating ? (
                             <>
@@ -265,7 +341,7 @@ const AudioPlayer = ({ audioFileName }: { audioFileName: string }) => {
 
     useEffect(() => {
         const loadNewAudio = async () => {
-            const buffer: ArrayBuffer = await window.electronAPI.readAudioFile(audioFileName)
+            const buffer: Buffer = await electronServices.readAudioFile(audioFileName)
             const blob = new Blob([buffer], { type: 'audio/mpeg' })
             const url = URL.createObjectURL(blob)
 

@@ -1,15 +1,25 @@
 import { ipcMain } from 'electron'
 import OpenAI from 'openai'
-import { PODCAST_EXPERT_PROMPT, AUDIO_Emotion_List, VoicePresetValues, voicePresets } from '../shared/constants'
+import {
+    PODCAST_EXPERT_PROMPT,
+    EMOTION_MAP,
+    VoicePresetValues,
+    voicePresets,
+    CONFIG_STORE_KEYS,
+    PODCAST_JSON_SCHEMA,
+} from '../shared/constants'
 import _ from 'lodash'
 import { extractDailyInfo } from '../shared/utils'
+import { getConfig } from '../main/electronStore'
 let openaiInstance: OpenAI | null = null
 
 const handlers = {
     // 根据topic生成对话
     fetchDialogue: async (event, { topic, apiKey }: { topic: string; apiKey?: string }) => {
         try {
-            const openai = getOpenAI(apiKey || process.env.MIN_MAX_API_KEY)
+            const openai = getOpenAI(
+                apiKey || (getConfig(CONFIG_STORE_KEYS.miniMaxApiKey) as string) || process.env.MIN_MAX_API_KEY
+            )
             const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
                 { role: 'system', content: PODCAST_EXPERT_PROMPT },
                 { role: 'user', content: topic },
@@ -18,20 +28,30 @@ const handlers = {
                 messages: messages,
                 model: `MiniMax-Text-01`, //`deepseek-chat`, // `deepseek-reasoner`,
             })
-            console.log(`fetchDialogue`, completion?.choices[0]?.message?.content)
+            // console.log(`🐹🐹🐹 start fetchDialogue`)
+            // const completion = await openai.beta.chat.completions.parse({
+            //     messages: messages,
+            //     model: `MiniMax-Text-01`, //`deepseek-chat`, // `deepseek-reasoner`,
+            //     response_format: { "type": "json_schema", "json_schema": PODCAST_JSON_SCHEMA }
+            // })
+            // console.log(`fetchDialogue`, completion.choices[0].message)
+            // const event = completion.choices[0].message?.parsed;
+            // console.log(`🐹🐹🐹 fetchDialogue event`, event)
+            // return event
             return completion?.choices[0]?.message?.content
         } catch (error) {
             console.log('Error fetching dialogue:', error)
             throw new Error('Failed to fetch dialogue')
         }
+        return null
     },
 
     fetchMinMaxAudio: async (
         event,
         { content, emotion, voiceID }: { content: string; emotion?: string; voiceID?: VoicePresetValues }
     ) => {
-        const apiKey = process.env.MIN_MAX_API_KEY
-        const groundID = process.env.MIN_MAX_GROUND_ID
+        const apiKey = (getConfig(CONFIG_STORE_KEYS.miniMaxApiKey) as string) || ``
+        const groundID = (getConfig(CONFIG_STORE_KEYS.miniMaxGroupID) as string) || ``
         const url = `https://api.minimax.chat/v1/t2a_v2?GroupId=${groundID}`
         console.log(`🐹🐹🐹fetchMinMaxAudio start`, content, emotion, voiceID)
         try {
@@ -48,7 +68,6 @@ const handlers = {
                     speed: 1,
                     vol: 1.5, // 音量
                     pitch: -1, // 声调
-                    // emotion: _.includes(AUDIO_Emotion_List, emotion) ? emotion : '',
                 },
                 audio_setting: {
                     sample_rate: 32000,
@@ -57,8 +76,8 @@ const handlers = {
                     channel: 1,
                 },
             }
-            if (_.includes(AUDIO_Emotion_List, emotion)) {
-                body.voice_setting.emotion = emotion
+            if (EMOTION_MAP[emotion]?.value) {
+                body.voice_setting.emotion = EMOTION_MAP[emotion].value
             }
             const result = await fetch(url, {
                 method: 'POST',

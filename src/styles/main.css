@@ -102,7 +102,7 @@
     align-items: center;
 }
 
-input:focus, input:focus-visible {
+input:focus, input:focus-visible, button:focus, button:focus-visible {
     outline: none;
     --tw-ring-shadow: none;
 }

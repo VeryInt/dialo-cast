@@ -1,6 +1,35 @@
 export const AUDIO_GAP_TEXT = `<#0.60#>`
+import { Home, Headphones, Settings, Mic2 } from 'lucide-react'
 
-export const AUDIO_Emotion_List = ['happy', 'sad', 'angry', 'fearful', 'disgusted', 'surprised', 'neutral']
+export const CONFIG_STORE_KEYS = {
+    miniMaxApiKey: `MIN_MAX_API_KEY`,
+    miniMaxGroupID: `MIN_MAX_GROUND_ID`,
+    hostVoiceOne: `HOST_VOICE_ONE`,
+    hostVoiceTwo: `HOST_VOICE_TWO`,
+}
+type ExtractPropValues<T extends readonly any[], K extends string> = T[number] extends infer Item
+    ? Item extends { [P in K]: infer V }
+        ? V
+        : never
+    : never
+
+export const navPages = [
+    { icon: Home, label: '主界面', value: 'main' },
+    { icon: Mic2, label: '音频示例', value: 'audioSamples' },
+    { icon: Settings, label: '设置', value: 'settings' },
+] as const
+
+// 提取所有 value 的类型（自动过滤没有 value 的项）
+export type NavPageValue = ExtractPropValues<typeof navPages, 'value'>
+export const EMOTION_MAP = {
+    happy: { value: 'happy', desc: '高兴' },
+    sad: { value: 'sad', desc: '悲伤' },
+    angry: { value: 'angry', desc: '愤怒' },
+    fearful: { value: 'fearful', desc: '害怕' },
+    disgusted: { value: 'disgusted', desc: '厌恶' },
+    surprised: { value: 'surprised', desc: '惊讶' },
+    neutral: { value: 'neutral', desc: '中性' },
+}
 
 type VoicePreset = {
     desc: string
@@ -91,7 +120,7 @@ export const enum GeneratingSatus {
 // podcast generating prompt
 export const PODCAST_EXPERT_PROMPT = `你是一个专业播客脚本生成器，专门将用户提供的主题或文本文件转换为可直接用于AI音频合成的结构化脚本。请严格遵循以下规则：
 由于我需要对文本内容进行转音频，所以需要你严格按照一下格式生成，并且不允许出现旁白，2个主持人分别名为 Mike 和 Jessica，有7种情绪，如果你觉得当前主持人所说的话符合下列情绪，请在当前这句话上标注，否则则留空。
-["happy", "sad", "angry", "fearful", "disgusted", "surprised", "neutral"]
+${JSON.stringify(Object.keys(EMOTION_MAP))}
 
 另外你认为觉得主持人的话术需要控制语音中间隔时间，可以在字间增加<#x#>, x单位为秒，支持0.01-99.99，最多两位小数。
 
@@ -131,3 +160,42 @@ export const PODCAST_EXPERT_PROMPT = `你是一个专业播客脚本生成器，
 确保每个对话段落可独立生成音频
 自动生成符合逻辑的过渡语句
 对专业术语自动附加口语化解释`
+
+export const PODCAST_JSON_SCHEMA = {
+    name: 'podcast_dialogue',
+    description: '生成双人播客对话的结构化输出',
+    schema: {
+        type: 'object',
+        properties: {
+            title: {
+                type: 'string',
+                description: '播客标题',
+            },
+            dialogue: {
+                type: 'array',
+                items: {
+                    type: 'object',
+                    properties: {
+                        host: {
+                            type: 'string',
+                            description: '主持人姓名，固定为Mike或Jessica',
+                        },
+                        content: {
+                            type: 'string',
+                            description: '对话文本内容',
+                        },
+                        emotion: {
+                            type: 'string',
+                            enum: ['happy', 'sad', 'angry', 'fearful', 'disgusted', 'surprised', 'neutral', ''],
+                            description: '情绪状态，无则空字符串',
+                        },
+                    },
+                    required: ['host', 'content', 'emotion'],
+                },
+                description: '必须包含两位主持人的对话',
+            },
+        },
+        required: ['dialogue', 'title'],
+        additionalProperties: false,
+    },
+}
