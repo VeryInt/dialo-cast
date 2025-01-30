@@ -25,14 +25,14 @@ export const extractJsonFromText = (text: string): Record<string, any> | null =>
     }
     console.log('Parsed JSON Result:', jsonResult)
     const { dialogue, title } = jsonResult || {}
-    return {dialogueList: dialogue, title}
+    return { dialogueList: dialogue, title }
 }
 
 export const extractJsonFromObject = (obj: Record<string, any>): Record<string, any> | null => {
     let jsonArray = []
     const { podcast_dialogue } = obj || {}
     const { dialogue, title } = podcast_dialogue || {}
-    return {dialogueList: dialogue, title}
+    return { dialogueList: dialogue, title }
 }
 
 /**

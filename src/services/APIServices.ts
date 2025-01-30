@@ -40,7 +40,7 @@ const handlers = {
                     response_format: { type: 'json_schema', json_schema: PODCAST_JSON_SCHEMA },
                 })
                 const event = completion.choices[0].message?.parsed
-                const { dialogueList, title } = extractJsonFromObject(event) 
+                const { dialogueList, title } = extractJsonFromObject(event)
                 return { dialogueList, title }
             } else {
                 const completion = await openai.chat.completions.create({

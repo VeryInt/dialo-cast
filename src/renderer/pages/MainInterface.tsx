@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react'
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
+import { useDropzone } from 'react-dropzone'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card'
@@ -24,6 +25,7 @@ import {
 } from '../../shared/constants'
 import DialogDisplay from '../components/DialogDisplay'
 import AudioPlayer from '../components/AudioPlayer'
+import readPDF from '../../shared/readPDF'
 
 import _ from 'lodash'
 const demoDialogue = [
@@ -77,18 +79,24 @@ export default function MainInterface({ className }: { className?: string }) {
         <div className={`flex w-full flex-col gap-6 max-w-3xl mx-auto min-w-md ${className || ''}`}>
             <div className="">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 gap-2 bg-gray-100">
+                    <TabsList className="grid w-full grid-cols-3 gap-2 bg-gray-100 min-h-12 ">
                         <TabsTrigger
                             value="topicCast"
-                            className="flex items-center cursor-pointer data-[state=active]:bg-gray-600 data-[state=active]:text-white"
+                            className="flex items-center cursor-pointer h-8 data-[state=active]:bg-gray-600 data-[state=active]:font-bold data-[state=active]:text-white bg-gray-200 shadow-md"
                         >
                             主题播客
                         </TabsTrigger>
                         <TabsTrigger
                             value="productItinerary"
-                            className="flex items-center cursor-pointer data-[state=active]:bg-gray-600 data-[state=active]:text-white"
+                            className="flex items-center cursor-pointer h-8 data-[state=active]:bg-gray-600 data-[state=active]:font-bold data-[state=active]:text-white bg-gray-200 shadow-md"
                         >
                             产品行程
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="PDFCast"
+                            className="flex items-center cursor-pointer h-8 data-[state=active]:bg-gray-600 data-[state=active]:font-bold data-[state=active]:text-white bg-gray-200 shadow-md"
+                        >
+                            PDF
                         </TabsTrigger>
                     </TabsList>
                     <TabsContent value="topicCast">
@@ -96,6 +104,9 @@ export default function MainInterface({ className }: { className?: string }) {
                     </TabsContent>
                     <TabsContent value="productItinerary">
                         <ProductCastGenerator callback={setDialogueList} />
+                    </TabsContent>
+                    <TabsContent value="PDFCast">
+                        <PDFPodcastGenerator />
                     </TabsContent>
                 </Tabs>
             </div>
@@ -210,7 +221,7 @@ const ProductCastGenerator = ({ callback }: { callback?: (dialogueList: Record<s
                 audioFilePath: filePath,
                 title: dialogueTitle || '',
                 keywords: castProductID,
-                type: DIALOGUE_TYPE.TOPIC,
+                type: DIALOGUE_TYPE.PRODUCTID,
                 dialogue_list: dialogueList,
             })
             console.log(`savedDialog`, savedDialog)
@@ -292,23 +303,6 @@ const PodcastGenerator = ({ callback }: { callback?: (dialogueList: Record<strin
         if (dialogueList?.length) {
             callback && callback(dialogueList)
             setGeneratingStatus(GeneratingSatus.AudioRequesting)
-            // const fetchList = _.compact(
-            //     _.map(dialogueList, (dialogueItem, dialogueIndex) => {
-            //         const { content, emotion, host } = dialogueItem || {}
-            //         if (content) {
-            //             return electronServices.fetchMinMaxAudio({
-            //                 content: `${dialogueIndex == 0 ? AUDIO_GAP_TEXT : ''}${content}${AUDIO_GAP_TEXT}`,
-            //                 emotion: emotion,
-            //                 voiceID:
-            //                     host == `Mike`
-            //                         ? voicePresets.maleQnJingyingBeta.value
-            //                         : voicePresets.attractiveGirl.value,
-            //             })
-            //         }
-            //         return null
-            //     })
-            // )
-            // const fetchResults = await Promise.all(fetchList)
             const fetchResults = await fetchMinMaxAudioBatch(dialogueList)
 
             // 直接通过合并 hex 生成
@@ -326,29 +320,6 @@ const PodcastGenerator = ({ callback }: { callback?: (dialogueList: Record<strin
             })
 
             console.log(`savedDialog`, savedDialog)
-            // const fetchSaveList = _.compact(
-            //     _.map(testList, dialogueItem => {
-            //         const { content, emotion } = dialogueItem || {}
-            //         if (content) {
-            //             return electronServices
-            //                 .fetchMinMaxAudio({ content, emotion: emotion || 'neutral' })
-            //                 .then((audioHex: string) => {
-            //                     return electronServices.saveAudio(audioHex)
-            //                 })
-            //         }
-            //         return null
-            //     })
-            // )
-            // console.log(`fetchSaveList`, fetchSaveList)
-            // const fetchSaveResults = await Promise.all(fetchSaveList)
-            // const audioFileList = _.map(fetchSaveResults, (fileInfo, fetchIndex) => {
-            //     const { name, filePath } = fileInfo || {}
-            //     return filePath
-            // })
-            // if (audioFileList?.length) {
-            //     await electronServices.mergetAudio(audioFileList, 'output.mp3')
-            //     setAudioFileName('output.mp3')
-            // }
         }
 
         updateIsGenerating(false)
@@ -399,6 +370,145 @@ const PodcastGenerator = ({ callback }: { callback?: (dialogueList: Record<strin
                             </>
                         ) : (
                             '生成播客对话'
+                        )}
+                    </Button>
+                </CardContent>
+            </Card>
+        </>
+    )
+}
+
+const PDFPodcastGenerator = ({ callback }: { callback?: (dialogueList: Record<string, any>[]) => void }) => {
+    const [PDFFile, setPDFFile] = useState<Record<string, any>>({})
+    const [PDFContent, setPDFContent] = useState('')
+    const [isEnglish, setIsEnglish] = useState(false)
+    const state = useMainStore(state => state)
+    const [generatingStatus, setGeneratingStatus] = useState(GeneratingSatus.DialogueGenerating)
+    const topicRef = useRef(null)
+    const { castTopic, isGenerating, updateCastTopic, updateIsGenerating, updateAudioPlayFile } = state || {}
+
+    const onDrop = useCallback(acceptedFiles => {
+        setPDFContent('')
+        const acceptedFile = acceptedFiles?.[0]
+        if (acceptedFile?.path) {
+            setPDFFile(acceptedFile)
+            const reader = new FileReader()
+
+            reader.onabort = () => console.log('file reading was aborted')
+            reader.onerror = () => console.log('file reading has failed')
+            reader.onload = async () => {
+                // Do whatever you want with the file contents
+                const binaryStr = reader.result
+                console.log(binaryStr)
+
+                const pdfContent = await readPDF(binaryStr)
+                setPDFContent(pdfContent)
+            }
+            reader.readAsArrayBuffer(acceptedFile)
+        }
+        console.log(`acceptedFile`, acceptedFile)
+    }, [])
+
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({
+        onDrop,
+        maxFiles: 1,
+        accept: {
+            'application/pdf': ['.pdf'],
+        },
+    })
+
+    const handleChagneLanguage = isEnglish => {
+        setIsEnglish(isEnglish)
+        electronServices.saveConfig(CONFIG_STORE_KEYS.englishDialog, isEnglish)
+    }
+
+    const handleGenerate = async () => {
+        updateIsGenerating(true)
+        setGeneratingStatus(GeneratingSatus.DialogueGenerating)
+        const dialogueResult = await electronServices.fetchDialogue({ topic: PDFContent, requestJson: false })
+        console.log(`dialogue`, dialogueResult)
+        const { dialogueList, title: dialogueTitle } = dialogueResult || {}
+        setGeneratingStatus(GeneratingSatus.DialogueExtracting)
+        if (dialogueList?.length) {
+            callback && callback(dialogueList)
+            setGeneratingStatus(GeneratingSatus.AudioRequesting)
+            const fetchResults = await fetchMinMaxAudioBatch(dialogueList)
+
+            // 直接通过合并 hex 生成
+            const now = Date.now()
+            setGeneratingStatus(GeneratingSatus.AudioSynthesizing)
+            const savedAudio = await electronServices.saveAudio(fetchResults.join(''), `${now}`)
+            updateAudioPlayFile(`${now}.mp3`)
+            const { filePath } = savedAudio || {}
+            const savedDialog = await electronServices.databaseSaveDialogue({
+                audioFilePath: filePath,
+                title: dialogueTitle || '',
+                keywords: PDFFile?.name || '',
+                type: DIALOGUE_TYPE.PDF,
+                dialogue_list: dialogueList,
+            })
+
+            console.log(`savedDialog`, savedDialog)
+        }
+
+        updateIsGenerating(false)
+    }
+    useEffect(() => {
+        electronServices.getConfig(CONFIG_STORE_KEYS.englishDialog).then((isEnglish: boolean) => {
+            setIsEnglish(!!isEnglish)
+        })
+    }, [])
+
+    return (
+        <>
+            <Card className=" border-gray-100 shadow-xl p-6 w-full mx-auto">
+                <CardHeader className="pt-0">
+                    <CardTitle>
+                        <div className="flex flex-row justify-between">
+                            <span>Podcast by PDF</span>
+                            <div className="grid grid-cols-2 gap-1 text-[14px] items-center">
+                                <span className="text-end">En</span>
+                                <Switch checked={isEnglish} onCheckedChange={handleChagneLanguage} />
+                            </div>
+                        </div>
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 pb-0">
+                    <div
+                        {...getRootProps()}
+                        className=" bg-gray-200 rounded-2xl min-h-20 text-gray-700 text-sm font-bold flex items-center justify-center cursor-pointer"
+                    >
+                        <input {...getInputProps()} />
+                        {PDFFile?.name ? (
+                            <>
+                                <p>
+                                    {PDFFile?.name || ''} -{' '}
+                                    {PDFFile?.size > 0 ? (PDFFile.size / 1024).toFixed(0) + 'KB' : ''}
+                                </p>
+                            </>
+                        ) : isDragActive ? (
+                            <p>将PDF拖到这里 ...</p>
+                        ) : (
+                            <p>
+                                拖拽PDF到这里，或
+                                <br />
+                                点击选择PDF文件
+                            </p>
+                        )}
+                    </div>
+                    <VoiceSelection className="my-5" />
+                    <Button
+                        onClick={handleGenerate}
+                        disabled={!PDFContent || isGenerating}
+                        className={`w-full py-5 ${PDFContent ? 'cursor-pointer' : ''}`}
+                    >
+                        {isGenerating ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                <span>{generatingStatus}</span>
+                            </>
+                        ) : (
+                            '生成讨论对话'
                         )}
                     </Button>
                 </CardContent>

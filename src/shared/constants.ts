@@ -184,17 +184,12 @@ Insert <#x#> tags (x=0.01-99.99) for speech timing control when needed.
 
 Output Format:
 Plain text array wrapped between identifiers:
-{{jsonstart}}[
-{"host": "Mike", "content": "Text"},
-{"host": "Jessica", "emotion": "surprised", "content": "Text<#1.23#>"},
-]{{jsonend}}
-
 {{jsonstart}}{
     "title": "the tile for this dialogue",
     "dialogue":[
-        {"host": "Mike", "content": "这是Mike说的话"},
-        {"host": "Jessica", "emotion": "surprised", "content": "这是Jessica惊讶时说的话"},
-        {"host": "Mike", "emotion":"happy", "content": "这是Mike高兴时说的话"},
+        {"host": "Mike", "content": "this is Mike's content"},
+        {"host": "Jessica", "emotion": "surprised", "content": "this is Jessica's content and she is surprised"},
+        {"host": "Mike", "emotion":"happy", "content": "I'm very happy."},
     ]
 }{{jsonend}}
 
