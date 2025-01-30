@@ -6,10 +6,30 @@ import MainInterface from './pages/MainInterface'
 import { electronServices } from '../services'
 import Settings from './pages/Settings'
 import Sidebar from './components/SideBar'
+import PodcastLibrary from './pages/PodcastLibrary'
+// import { databaseService } from '../services/DatabaseService_reference'; // 引入 databaseService
 
 const Main = () => {
     const state = useMainStore(state => state)
     const { currentPage } = state || {}
+
+    // useEffect(() => {
+    //     const testDatabase = async () => {
+    //         try {
+    //             // 创建 Item
+    //             await databaseService.createItem('测试物品', '这是一个测试物品');
+    //             console.log('Item 创建成功');
+
+    //             // 获取所有 Items
+    //             const items = await databaseService.getAllItems();
+    //             console.log('所有 Items:', items);
+    //         } catch (error) {
+    //             console.error('数据库操作失败:', error);
+    //         }
+    //     };
+
+    //     testDatabase();
+    // }, []);
 
     return (
         <div className="flex flex-row w-full h-full bg-gray-300 min-w-fit">
@@ -20,6 +40,7 @@ const Main = () => {
                 <div className="flex flex-col min-w-lg w-full">
                     {currentPage == 'main' && <MainInterface />}
                     {currentPage == 'settings' && <Settings />}
+                    {currentPage == 'podcastLibrary' && <PodcastLibrary />}
                 </div>
             </div>
         </div>

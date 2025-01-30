@@ -43,8 +43,8 @@ export default function Settings() {
     return (
         <div className="container flex flex-col mx-auto max-w-6xl">
             <Card className=" border-gray-100 shadow-xl p-6 w-full mx-auto">
-                <CardHeader className="pt-0">
-                    <CardTitle className="text-2xl">设置</CardTitle>
+                <CardHeader className="pt-0 text-xl">
+                    <CardTitle>设置</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="gap-6 flex flex-col">

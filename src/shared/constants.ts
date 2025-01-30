@@ -1,5 +1,11 @@
 export const AUDIO_GAP_TEXT = `<#0.60#>`
-import { Home, Headphones, Settings, Mic2 } from 'lucide-react'
+import { Home, Headphones, Settings, FileAudio, Podcast } from 'lucide-react'
+
+export const enum DIALOGUE_TYPE {
+    TOPIC = 'topic',
+    PRODUCTID = 'productID',
+    PDF = 'pdf',
+}
 
 export const CONFIG_STORE_KEYS = {
     miniMaxApiKey: `MIN_MAX_API_KEY`,
@@ -16,7 +22,8 @@ type ExtractPropValues<T extends readonly any[], K extends string> = T[number] e
 
 export const navPages = [
     { icon: Home, label: '主界面', value: 'main' },
-    { icon: Mic2, label: '音频示例', value: 'audioSamples' },
+    { icon: FileAudio, label: '音频示例', value: 'audioSamples' },
+    { icon: Podcast, label: '播客库', value: 'podcastLibrary' },
     { icon: Settings, label: '设置', value: 'settings' },
 ] as const
 
@@ -127,13 +134,16 @@ ${JSON.stringify(Object.keys(EMOTION_MAP))}
 
 ### 输出格式：
 使用纯文本标记主持人对话，并且最终以对象数组的方式返回，另外需要在数组的开头加上标识符{{jsonstart}}，在数组的末尾加上标识符{{jsonend}}好方便我截取并且格式化：
-{{jsonstart}}[
-{"host": "Mike", "content": "这是Mike说的话"},
-{"host": "Jessica", "emotion": "surprised", "content": "这是Jessica惊讶时说的话"},
-{"host": "Mike", "emotion":"happy", "content": "这是Mike高兴时说的话"},
-]{{jsonend}}
+{{jsonstart}}{
+    "title": "对话的主题内容",
+    "dialogue":[
+        {"host": "Mike", "content": "这是Mike说的话"},
+        {"host": "Jessica", "emotion": "surprised", "content": "这是Jessica惊讶时说的话"},
+        {"host": "Mike", "emotion":"happy", "content": "这是Mike高兴时说的话"},
+    ]
+}{{jsonend}}
 
-禁止使用任何括号提示词、注释或非内容文本，记住需要严格按照上面提供的格式输出
+禁止使用任何括号提示词、注释或非内容文本，记住需要严格按照上面提供的格式输出。
 
 ### 内容要求：
 如果没有说明，那么默认生成不少于5000字/10分钟的脚本
@@ -178,6 +188,15 @@ Plain text array wrapped between identifiers:
 {"host": "Mike", "content": "Text"},
 {"host": "Jessica", "emotion": "surprised", "content": "Text<#1.23#>"},
 ]{{jsonend}}
+
+{{jsonstart}}{
+    "title": "the tile for this dialogue",
+    "dialogue":[
+        {"host": "Mike", "content": "这是Mike说的话"},
+        {"host": "Jessica", "emotion": "surprised", "content": "这是Jessica惊讶时说的话"},
+        {"host": "Mike", "emotion":"happy", "content": "这是Mike高兴时说的话"},
+    ]
+}{{jsonend}}
 
 NO markdown/extra symbols. Maintain strict JSON array format.
 

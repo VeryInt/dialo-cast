@@ -9,30 +9,30 @@ export const sleep = (seconds: number) => {
 }
 
 // 从下发的文本中提取JSON数组
-export const extractJsonArrayFromText = (text: string): Record<string, any>[] | null => {
-    const regex = /{{jsonstart}}\s*\[[\s\S]*?\]\s*{{jsonend}}/
+export const extractJsonFromText = (text: string): Record<string, any> | null => {
+    const regex = /{{jsonstart}}\s*\{[\s\S]*?\}\s*{{jsonend}}/
     const match = text?.replace(/[\r\n]+/g, '')?.match(regex)
-    let jsonArray = []
+    let jsonResult: Record<string, any> = {}
     if (match && match[0]) {
         let jsonString = match[0].replace('{{jsonstart}}', '').replace('{{jsonend}}', '').trim()
         jsonString = jsonString.replace(/[\r\n]+/g, '') // 移除所有换行符
         console.log('Extracted JSON String:', jsonString)
         try {
-            jsonArray = JSON.parse(jsonString)
+            jsonResult = JSON.parse(jsonString)
         } catch {
             console.error('Invalid JSON format in dialogue')
         }
     }
-    console.log('Parsed JSON Array:', jsonArray)
-    return jsonArray
+    console.log('Parsed JSON Result:', jsonResult)
+    const { dialogue, title } = jsonResult || {}
+    return {dialogueList: dialogue, title}
 }
 
-export const extractJsonArrayFromObject = (obj: Record<string, any>): Record<string, any>[] | null => {
+export const extractJsonFromObject = (obj: Record<string, any>): Record<string, any> | null => {
     let jsonArray = []
     const { podcast_dialogue } = obj || {}
     const { dialogue, title } = podcast_dialogue || {}
-    jsonArray = dialogue || []
-    return jsonArray
+    return {dialogueList: dialogue, title}
 }
 
 /**

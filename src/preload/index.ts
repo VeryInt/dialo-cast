@@ -14,6 +14,10 @@ const APIList: (keyof ElectronAPI)[] = [
     'readAudioFile',
     'fetchProductDailyList',
     'openLink',
+    'databaseSaveDialogue',
+    'databaseGetDialogue',
+    'databaseListDialogues',
+    'databaseDelDialogue',
 ]
 const eventList: (keyof ElectronEvent)[] = ['minimizeToTray']
 

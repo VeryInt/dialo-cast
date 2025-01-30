@@ -1,5 +1,6 @@
 import { ipcMain, app } from 'electron'
 import fs from 'fs'
+import fsExtra from 'fs-extra'
 import path from 'path'
 import { getConfig, saveConfig } from '../main/electronStore'
 import ffmpeg from 'fluent-ffmpeg'
@@ -68,11 +69,20 @@ const handlers = {
             buffer: mergedBuffer,
         }
     },
-    readAudioFile: async (_, filename): Promise<Buffer> => {
+    readAudioFile: async (event, filename): Promise<Buffer> => {
         const filePath = path.join(audioDir, filename)
 
         const buffer = await fs.promises.readFile(filePath)
         return buffer
+    },
+    deleteAudioFile: async (event, filename) => {
+        // 先判断传入的filename是否已经是完整路径
+        const filePath = filename.startsWith(audioDir) ? filename : path.join(audioDir, filename)
+        // await fs.promises.unlink(filePath)
+        await fsExtra.remove(filePath)
+        return {
+            success: true,
+        }
     },
 }
 

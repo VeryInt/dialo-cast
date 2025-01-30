@@ -5,21 +5,28 @@ import { ipcMain, BrowserWindow, clipboard } from 'electron'
 import FileServices from './FileServices'
 import APIServices from './APIServices'
 import SystemServices from './SystemServices'
+import DatabaseServices from './DatabaseServices'
 
 export default function setupServices() {
     // fileServices()
     // apiServices()
     // systemServices()
 
-    Object.entries({ ...SystemServices.handlers, ...FileServices.handlers, ...APIServices.handlers }).forEach(
-        ([channel, handler]) => {
-            ipcMain.handle(channel, handler)
-        }
-    )
+    Object.entries({
+        ...SystemServices.handlers,
+        ...FileServices.handlers,
+        ...APIServices.handlers,
+        ...DatabaseServices.handlers,
+    }).forEach(([channel, handler]) => {
+        ipcMain.handle(channel, handler)
+    })
 
-    Object.entries({ ...SystemServices.events, ...FileServices.events, ...APIServices.events }).forEach(
-        ([event, handler]) => {
-            ipcMain.on(event, handler)
-        }
-    )
+    Object.entries({
+        ...SystemServices.events,
+        ...FileServices.events,
+        ...APIServices.events,
+        ...DatabaseServices.events,
+    }).forEach(([event, handler]) => {
+        ipcMain.on(event, handler)
+    })
 }

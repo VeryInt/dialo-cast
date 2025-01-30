@@ -10,7 +10,7 @@ import {
     ENG_PODCAST_EXPERT_PROMPT,
 } from '../shared/constants'
 import _ from 'lodash'
-import { extractDailyInfo, extractJsonArrayFromText, extractJsonArrayFromObject } from '../shared/utils'
+import { extractDailyInfo, extractJsonFromText, extractJsonFromObject } from '../shared/utils'
 import { getConfig } from '../main/electronStore'
 let openaiInstance: OpenAI | null = null
 
@@ -40,7 +40,8 @@ const handlers = {
                     response_format: { type: 'json_schema', json_schema: PODCAST_JSON_SCHEMA },
                 })
                 const event = completion.choices[0].message?.parsed
-                return { dialogueList: extractJsonArrayFromObject(event) }
+                const { dialogueList, title } = extractJsonFromObject(event) 
+                return { dialogueList, title }
             } else {
                 const completion = await openai.chat.completions.create({
                     messages: messages,
@@ -48,7 +49,8 @@ const handlers = {
                     max_tokens: 30720,
                 })
                 console.log(`🐹🐹🐹 completion?.choices[0]?.message?.content`, completion?.choices[0]?.message?.content)
-                return { dialogueList: extractJsonArrayFromText(completion?.choices[0]?.message?.content) }
+                const { dialogueList, title } = extractJsonFromText(completion?.choices[0]?.message?.content)
+                return { dialogueList, title }
             }
         } catch (error) {
             console.log('Error fetching dialogue:', error)

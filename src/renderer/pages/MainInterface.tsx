@@ -13,9 +13,10 @@ import { Loader2, Play, Pause, SkipBack, SkipForward, Edit2, ChevronDown, Chevro
 import { useMainStore } from '../providers'
 import { electronServices } from '../../services'
 import { Switch } from '../components/ui/switch'
-import { extractJsonArrayFromText, constsequentialAsyncCalls, formatPlayTime, fetchAll } from '../../shared/utils'
-import { AUDIO_GAP_TEXT, voicePresets, GeneratingSatus, CONFIG_STORE_KEYS } from '../../shared/constants'
+import { extractJsonFromText, constsequentialAsyncCalls, formatPlayTime, fetchAll } from '../../shared/utils'
+import { AUDIO_GAP_TEXT, voicePresets, GeneratingSatus, CONFIG_STORE_KEYS, DIALOGUE_TYPE } from '../../shared/constants'
 import DialogDisplay from '../components/DialogDisplay'
+import AudioPlayer from '../components/AudioPlayer'
 
 import _ from 'lodash'
 const demoDialogue = [
@@ -274,9 +275,9 @@ const PodcastGenerator = ({ callback }: { callback?: (dialogueList: Record<strin
         console.log(`topic`, castTopic)
         updateIsGenerating(true)
         setGeneratingStatus(GeneratingSatus.DialogueGenerating)
-        const dialogue = await electronServices.fetchDialogue({ topic: castTopic, requestJson: false })
-        console.log(`dialogue`, dialogue)
-        const { dialogueList } = dialogue || {}
+        const dialogueResult = await electronServices.fetchDialogue({ topic: castTopic, requestJson: false })
+        console.log(`dialogue`, dialogueResult)
+        const { dialogueList, titile: dialogueTitle } = dialogueResult || {}
         setGeneratingStatus(GeneratingSatus.DialogueExtracting)
         if (dialogueList?.length) {
             callback && callback(dialogueList)
@@ -303,8 +304,18 @@ const PodcastGenerator = ({ callback }: { callback?: (dialogueList: Record<strin
             // 直接通过合并 hex 生成
             const now = Date.now()
             setGeneratingStatus(GeneratingSatus.AudioSynthesizing)
-            await electronServices.saveAudio(fetchResults.join(''), `${now}`)
+            const savedAudio = await electronServices.saveAudio(fetchResults.join(''), `${now}`)
             updateAudioPlayFile(`${now}.mp3`)
+            const { filePath } = savedAudio || {}
+            const savedDialog = await electronServices.databaseSaveDialogue({
+                audioFilePath: filePath,
+                title: dialogueTitle || '',
+                keywords: castTopic,
+                type: DIALOGUE_TYPE.TOPIC,
+                dialogue_list: dialogueList, 
+            })
+
+            console.log(`savedDialog`, savedDialog)
             // const fetchSaveList = _.compact(
             //     _.map(testList, dialogueItem => {
             //         const { content, emotion } = dialogueItem || {}
@@ -339,6 +350,15 @@ const PodcastGenerator = ({ callback }: { callback?: (dialogueList: Record<strin
     }
 
     useEffect(() => {
+
+        // electronServices.databaseSaveDialogue({
+        //     audioFilePath: ` C:\\Users\\luyi1\\AppData\\Roaming\\dialo-cast\\audio\\1738226624046.mp3`,
+        //     title: `test title`,
+        //     keywords: `test keywords`,
+        //     type: DIALOGUE_TYPE.TOPIC,
+        //     dialogue_list: [{"host": "Mike", "content": "test content", "emotion": "happy"}], 
+        // })
+
         electronServices.getConfig(CONFIG_STORE_KEYS.englishDialog).then((isEnglish: boolean) => {
             setIsEnglish(!!isEnglish)
         })
@@ -386,145 +406,6 @@ const PodcastGenerator = ({ callback }: { callback?: (dialogueList: Record<strin
     )
 }
 
-const AudioPlayer = ({ audioFileName }: { audioFileName: string }) => {
-    const [isPlaying, setIsPlaying] = useState(false)
-    const [totalTime, setTotalTime] = useState('00:00')
-    const [currentTime, setCurrentTime] = useState(0)
-    const [timeDisplay, setTimeDisplay] = useState('00:00')
-    const [duration, setDuration] = useState(0)
-    const audioRef = useRef(null)
-    const downloadRef = useRef(null)
-    useEffect(() => {
-        setTimeDisplay(formatPlayTime(currentTime))
-    }, [currentTime])
-
-    const handleTimeUpdate = () => {
-        const audioHtmlElement = audioRef.current as HTMLAudioElement
-        setCurrentTime(audioHtmlElement.currentTime)
-    }
-
-    const handleCanPlay = () => {
-        console.log(`handleCanPlay`)
-    }
-
-    const handleDownloadAudio = () => {
-        console.log(`handleDownloadAudio`)
-        const downloadElement = downloadRef.current as HTMLAnchorElement
-        downloadElement.click()
-    }
-
-    const handleLoadedMetadata = () => {
-        console.log(`handleLoadedMetadata`)
-        const audioHtmlElement = audioRef.current as HTMLAudioElement
-        const totalDuration = audioHtmlElement?.duration || 0
-        if (totalDuration > 0) {
-            setTotalTime(formatPlayTime(totalDuration))
-            setDuration(totalDuration)
-        }
-    }
-
-    const handleMoveTime = newTime => {
-        console.log(`newTime`, newTime)
-        const audioHtmlElement = audioRef.current as HTMLAudioElement
-        // 把 audio 调到第一帧
-        const src = audioHtmlElement.src
-        // audioHtmlElement.src = '';
-        // audioHtmlElement.src = src;
-        // audioHtmlElement.play()
-        audioHtmlElement.pause()
-        audioHtmlElement.currentTime = parseInt(newTime)
-        setCurrentTime(parseInt(newTime))
-        audioHtmlElement.play()
-    }
-
-    useEffect(() => {
-        const loadNewAudio = async () => {
-            const buffer: Buffer = await electronServices.readAudioFile(audioFileName)
-            const blob = new Blob([buffer], { type: 'audio/mpeg' })
-            const url = URL.createObjectURL(blob)
-
-            // const audio = new Audio(url);
-            // audio.play()
-            // // 记得在不需要时释放
-            // audio.onended = () => URL.revokeObjectURL(url)
-
-            const audioHtmlElement = audioRef.current as HTMLAudioElement
-            audioHtmlElement.src = url
-            ;(downloadRef.current as HTMLAnchorElement).href = url
-
-            // audioHtmlElement.ontimeupdate = handleTimeUpdate;
-            // audioHtmlElement.onloadedmetadata = handleLoadedMetadata;
-
-            // 把 audio 调到第一帧
-            // audioHtmlElement.currentTime = 0;
-            setCurrentTime(0)
-            // 获取播放的总时长
-            console.log(`duration`, audioHtmlElement.duration)
-            setIsPlaying(true)
-        }
-        if (audioFileName) {
-            loadNewAudio()
-        }
-    }, [audioFileName])
-
-    useEffect(() => {
-        const audioHtmlElement = audioRef.current as HTMLAudioElement
-        if (audioHtmlElement?.hasAttribute('src')) {
-            if (isPlaying) {
-                audioHtmlElement.play()
-            } else {
-                audioHtmlElement.pause()
-            }
-        }
-    }, [isPlaying])
-
-    if (!audioFileName) {
-        return null
-    }
-    return (
-        <>
-            <Card className=" border-gray-100 shadow-xl p-6 w-full mx-auto">
-                <CardHeader className="pt-0">
-                    <CardTitle>播客播放器</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4 pb-0">
-                    <div className="text-lg font-medium">{``}</div>
-                    <div className="flex justify-center items-center space-x-4 relative">
-                        <SkipBack className="w-6 h-6 cursor-pointer" />
-                        {isPlaying ? (
-                            <Pause className="w-8 h-8 cursor-pointer" onClick={() => setIsPlaying(false)} />
-                        ) : (
-                            <Play className="w-8 h-8 cursor-pointer" onClick={() => setIsPlaying(true)} />
-                        )}
-                        <SkipForward className="w-6 h-6 cursor-pointer" />
-                        <Download className="w-6 h-6 cursor-pointer absolute right-0 " onClick={handleDownloadAudio} />
-                    </div>
-                    <Slider
-                        value={[currentTime]}
-                        max={duration}
-                        step={1}
-                        // className="w-full"
-                        onValueChange={([value]) => handleMoveTime(value)}
-                    />
-                    <div className="flex justify-between text-sm mb-0">
-                        <span>{timeDisplay}</span>
-                        <span>{totalTime}</span>
-                    </div>
-                    <div className="hidden">
-                        <a ref={downloadRef} download="filename.mp3" className="hidden"></a>
-                        <audio
-                            ref={audioRef}
-                            onTimeUpdate={handleTimeUpdate}
-                            onCanPlay={handleCanPlay}
-                            onLoadedMetadata={handleLoadedMetadata}
-                            className="w-full bg-transparent "
-                        />
-                    </div>
-                </CardContent>
-            </Card>
-        </>
-    )
-}
 
 // 由于miniMax接口有RPM限制，所以需要分批次请求， 目前RPM限制为 20，保险起见，设置为 10
 const fetchMinMaxAudioBatch = async (dialogueList: Record<string, any>[]) => {
