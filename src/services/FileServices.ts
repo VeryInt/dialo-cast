@@ -70,8 +70,8 @@ const handlers = {
         }
     },
     readAudioFile: async (event, filename): Promise<Buffer> => {
-        const filePath = path.join(audioDir, filename)
-
+        // 先判断传入的filename是否已经是完整路径
+        const filePath = filename.startsWith(audioDir) ? filename : path.join(audioDir, filename)
         const buffer = await fs.promises.readFile(filePath)
         return buffer
     },

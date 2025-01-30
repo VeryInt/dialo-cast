@@ -56,7 +56,7 @@ export const createMainStore = (initState: MainState = defaultInitState) => {
             updateCastTopic: (topic: string) => {
                 return set(state => {
                     return {
-                        castTopic: String(topic ?? '').trim(),
+                        castTopic: String(topic ?? ''),
                     }
                 })
             },

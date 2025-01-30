@@ -1,12 +1,11 @@
-import React, {useState, useEffect, useRef} from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { formatPlayTime } from '../../shared/utils'
 import { electronServices } from '../../services'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Loader2, Play, Pause, SkipBack, SkipForward, Edit2, ChevronDown, ChevronUp, Download } from 'lucide-react'
 import { Slider } from './ui/slider'
 
-
-export default function AudioPlayer ({ audioFileName, className }: { audioFileName: string, className?: string }){
+export default function AudioPlayer({ audioFileName, className }: { audioFileName: string; className?: string }) {
     const [isPlaying, setIsPlaying] = useState(false)
     const [totalTime, setTotalTime] = useState('00:00')
     const [currentTime, setCurrentTime] = useState(0)
@@ -59,6 +58,7 @@ export default function AudioPlayer ({ audioFileName, className }: { audioFileNa
 
     useEffect(() => {
         const loadNewAudio = async () => {
+            setIsPlaying(false)
             const buffer: Buffer = await electronServices.readAudioFile(audioFileName)
             const blob = new Blob([buffer], { type: 'audio/mpeg' })
             const url = URL.createObjectURL(blob)
@@ -112,12 +112,21 @@ export default function AudioPlayer ({ audioFileName, className }: { audioFileNa
                     <div className="flex justify-center items-center space-x-4 relative">
                         <SkipBack className={`w-6 h-6  ${!audioFileName ? 'text-gray-300' : 'cursor-pointer'}`} />
                         {isPlaying ? (
-                            <Pause className={`w-8 h-8  ${!audioFileName ? 'text-gray-300' : 'cursor-pointer'}`} onClick={() => setIsPlaying(false)} />
+                            <Pause
+                                className={`w-8 h-8  ${!audioFileName ? 'text-gray-300' : 'cursor-pointer'}`}
+                                onClick={() => setIsPlaying(false)}
+                            />
                         ) : (
-                            <Play className={`w-8 h-8  ${!audioFileName ? 'text-gray-300' : 'cursor-pointer'}`} onClick={() => !!audioFileName && setIsPlaying(true)} />
+                            <Play
+                                className={`w-8 h-8  ${!audioFileName ? 'text-gray-300' : 'cursor-pointer'}`}
+                                onClick={() => !!audioFileName && setIsPlaying(true)}
+                            />
                         )}
                         <SkipForward className={`w-6 h-6  ${!audioFileName ? 'text-gray-300' : 'cursor-pointer'}`} />
-                        <Download className={`w-6 h-6 ${!audioFileName ? 'text-gray-300' : 'cursor-pointer'} absolute right-0 `} onClick={handleDownloadAudio} />
+                        <Download
+                            className={`w-6 h-6 ${!audioFileName ? 'text-gray-300' : 'cursor-pointer'} absolute right-0 `}
+                            onClick={handleDownloadAudio}
+                        />
                     </div>
                     <Slider
                         value={[currentTime]}

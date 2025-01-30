@@ -126,6 +126,16 @@ body {
     overflow: hidden;  /* 确保无滚动条 */
     -webkit-overflow-scrolling: touch;  /* 保持iOS惯性滚动 */
 }
+*::-webkit-scrollbar {
+    display: none;
+}
+  
+/* Hide scrollbar for IE, Edge and Firefox */
+* {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
 
 input:focus, input:focus-visible, button:focus, button:focus-visible {
     outline: none;

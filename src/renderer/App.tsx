@@ -38,7 +38,7 @@ const Main = () => {
             </div>
             <div className="flex-1 p-10">
                 <div className="flex flex-col min-w-lg w-full">
-                    {currentPage == 'main' && <MainInterface />}
+                    {<MainInterface className={`${currentPage == 'main' ? '' : 'hidden'}`} />}
                     {currentPage == 'settings' && <Settings />}
                     {currentPage == 'podcastLibrary' && <PodcastLibrary />}
                 </div>

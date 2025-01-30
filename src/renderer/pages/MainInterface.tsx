@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, HtmlHTMLAttributes } from 'react'
+import React, { useState, useRef, useEffect, useMemo } from 'react'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card'
@@ -14,7 +14,14 @@ import { useMainStore } from '../providers'
 import { electronServices } from '../../services'
 import { Switch } from '../components/ui/switch'
 import { extractJsonFromText, constsequentialAsyncCalls, formatPlayTime, fetchAll } from '../../shared/utils'
-import { AUDIO_GAP_TEXT, voicePresets, GeneratingSatus, CONFIG_STORE_KEYS, DIALOGUE_TYPE } from '../../shared/constants'
+import {
+    AUDIO_GAP_TEXT,
+    voicePresets,
+    GeneratingSatus,
+    CONFIG_STORE_KEYS,
+    DIALOGUE_TYPE,
+    VoicePresetValues,
+} from '../../shared/constants'
 import DialogDisplay from '../components/DialogDisplay'
 import AudioPlayer from '../components/AudioPlayer'
 
@@ -61,13 +68,13 @@ const demoDialogue = [
         content: '没错。<#0.5#>能源价格上涨不仅影响了消费者，也对工业生产造成了压力',
     },
 ]
-export default function MainInterface() {
+export default function MainInterface({ className }: { className?: string }) {
     const state = useMainStore(state => state)
     const [dialogueList, setDialogueList] = useState<any[]>([])
     const { audioPlayFile } = state || {}
     const [activeTab, setActiveTab] = useState('topicCast')
     return (
-        <div className="flex w-full flex-col gap-6 max-w-3xl mx-auto min-w-md">
+        <div className={`flex w-full flex-col gap-6 max-w-3xl mx-auto min-w-md ${className || ''}`}>
             <div className="">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                     <TabsList className="grid w-full grid-cols-2 gap-2 bg-gray-100">
@@ -102,7 +109,7 @@ export default function MainInterface() {
     )
 }
 
-const VoiceSelection = ({ className }: { className?: string }) => {
+const VoiceSelection = React.memo(({ className }: { className?: string }) => {
     const state = useMainStore(state => state)
     const [host1Voice, setHost1Voice] = useState('')
     const [host2Voice, setHost2Voice] = useState('')
@@ -125,6 +132,17 @@ const VoiceSelection = ({ className }: { className?: string }) => {
         }
     }
 
+    // 缓存音色选项列表
+    const voiceOptions = useMemo(
+        () =>
+            _.map(voicePresets, ({ desc, value }) => (
+                <SelectItem key={value} value={value}>
+                    {desc}
+                </SelectItem>
+            )),
+        [] // voicePresets 为静态数据时使用空依赖
+    )
+
     return (
         <>
             <div className={`grid grid-cols-2 gap-4 ${className}`}>
@@ -136,16 +154,7 @@ const VoiceSelection = ({ className }: { className?: string }) => {
                         <SelectTrigger id="host1-voice">
                             <SelectValue placeholder="选择音色" />
                         </SelectTrigger>
-                        <SelectContent className="border-gray-200">
-                            {_.map(voicePresets, (voiceValue, voicePresetKey) => {
-                                const { desc, value } = voiceValue || {}
-                                return (
-                                    <SelectItem key={value} value={value}>
-                                        {desc}
-                                    </SelectItem>
-                                )
-                            })}
-                        </SelectContent>
+                        <SelectContent className="border-gray-200">{voiceOptions}</SelectContent>
                     </Select>
                 </div>
                 <div>
@@ -156,22 +165,13 @@ const VoiceSelection = ({ className }: { className?: string }) => {
                         <SelectTrigger id="host2-voice">
                             <SelectValue placeholder="选择音色" />
                         </SelectTrigger>
-                        <SelectContent className="border-gray-200">
-                            {_.map(voicePresets, (voiceValue, voicePresetKey) => {
-                                const { desc, value } = voiceValue || {}
-                                return (
-                                    <SelectItem key={value} value={value}>
-                                        {desc}
-                                    </SelectItem>
-                                )
-                            })}
-                        </SelectContent>
+                        <SelectContent className="border-gray-200">{voiceOptions}</SelectContent>
                     </Select>
                 </div>
             </div>
         </>
     )
-}
+})
 
 const ProductCastGenerator = ({ callback }: { callback?: (dialogueList: Record<string, any>[]) => void }) => {
     const state = useMainStore(state => state)
@@ -192,9 +192,9 @@ const ProductCastGenerator = ({ callback }: { callback?: (dialogueList: Record<s
         const producItinerary = await electronServices.fetchProductDailyList({ productID: Number(castProductID) })
         console.log(`producItinerary`, producItinerary)
         setGeneratingStatus(GeneratingSatus.DialogueGenerating)
-        const dialogue = await electronServices.fetchDialogue({ topic: producItinerary, requestJson: false })
+        const dialogueResult = await electronServices.fetchDialogue({ topic: producItinerary, requestJson: false })
+        const { dialogueList, title: dialogueTitle } = dialogueResult || {}
         setGeneratingStatus(GeneratingSatus.DialogueExtracting)
-        const { dialogueList } = dialogue || {}
         if (dialogueList?.length) {
             callback && callback(dialogueList)
             setGeneratingStatus(GeneratingSatus.AudioRequesting)
@@ -203,8 +203,17 @@ const ProductCastGenerator = ({ callback }: { callback?: (dialogueList: Record<s
             // 直接通过合并 hex 生成
             const now = Date.now()
             setGeneratingStatus(GeneratingSatus.AudioSynthesizing)
-            await electronServices.saveAudio(fetchResults.join(''), `${now}`)
+            const savedAudio = await electronServices.saveAudio(fetchResults.join(''), `${now}`)
             updateAudioPlayFile(`${now}.mp3`)
+            const { filePath } = savedAudio || {}
+            const savedDialog = await electronServices.databaseSaveDialogue({
+                audioFilePath: filePath,
+                title: dialogueTitle || '',
+                keywords: castProductID,
+                type: DIALOGUE_TYPE.TOPIC,
+                dialogue_list: dialogueList,
+            })
+            console.log(`savedDialog`, savedDialog)
         }
         updateIsGenerating(false)
     }
@@ -273,11 +282,12 @@ const PodcastGenerator = ({ callback }: { callback?: (dialogueList: Record<strin
     }
     const handleGenerate = async () => {
         console.log(`topic`, castTopic)
+        updateCastTopic(String(castTopic || '').trim())
         updateIsGenerating(true)
         setGeneratingStatus(GeneratingSatus.DialogueGenerating)
         const dialogueResult = await electronServices.fetchDialogue({ topic: castTopic, requestJson: false })
         console.log(`dialogue`, dialogueResult)
-        const { dialogueList, titile: dialogueTitle } = dialogueResult || {}
+        const { dialogueList, title: dialogueTitle } = dialogueResult || {}
         setGeneratingStatus(GeneratingSatus.DialogueExtracting)
         if (dialogueList?.length) {
             callback && callback(dialogueList)
@@ -312,7 +322,7 @@ const PodcastGenerator = ({ callback }: { callback?: (dialogueList: Record<strin
                 title: dialogueTitle || '',
                 keywords: castTopic,
                 type: DIALOGUE_TYPE.TOPIC,
-                dialogue_list: dialogueList, 
+                dialogue_list: dialogueList,
             })
 
             console.log(`savedDialog`, savedDialog)
@@ -350,15 +360,6 @@ const PodcastGenerator = ({ callback }: { callback?: (dialogueList: Record<strin
     }
 
     useEffect(() => {
-
-        // electronServices.databaseSaveDialogue({
-        //     audioFilePath: ` C:\\Users\\luyi1\\AppData\\Roaming\\dialo-cast\\audio\\1738226624046.mp3`,
-        //     title: `test title`,
-        //     keywords: `test keywords`,
-        //     type: DIALOGUE_TYPE.TOPIC,
-        //     dialogue_list: [{"host": "Mike", "content": "test content", "emotion": "happy"}], 
-        // })
-
         electronServices.getConfig(CONFIG_STORE_KEYS.englishDialog).then((isEnglish: boolean) => {
             setIsEnglish(!!isEnglish)
         })
@@ -406,9 +407,15 @@ const PodcastGenerator = ({ callback }: { callback?: (dialogueList: Record<strin
     )
 }
 
-
 // 由于miniMax接口有RPM限制，所以需要分批次请求， 目前RPM限制为 20，保险起见，设置为 10
 const fetchMinMaxAudioBatch = async (dialogueList: Record<string, any>[]) => {
+    let [mikeVoice, jessicaVoice] = await Promise.all([
+        electronServices.getConfig(CONFIG_STORE_KEYS.hostVoiceOne) as Promise<VoicePresetValues>,
+        electronServices.getConfig(CONFIG_STORE_KEYS.hostVoiceTwo) as Promise<VoicePresetValues>,
+    ])
+
+    mikeVoice = mikeVoice || voicePresets.maleQnJingyingBeta.value
+    jessicaVoice = jessicaVoice || voicePresets.attractiveGirl.value
     // 每一批需要等待上一批全部返回之后才能继续
     const fetchAwaitList = _.map(_.chunk(dialogueList, 10), chunkItem => {
         const fetchList = _.compact(
@@ -419,10 +426,7 @@ const fetchMinMaxAudioBatch = async (dialogueList: Record<string, any>[]) => {
                         electronServices.fetchMinMaxAudio({
                             content: `${dialogueIndex == 0 ? AUDIO_GAP_TEXT : ''}${content}${AUDIO_GAP_TEXT}`,
                             emotion: emotion,
-                            voiceID:
-                                host == `Mike`
-                                    ? voicePresets.maleQnJingyingBeta.value
-                                    : voicePresets.attractiveGirl.value,
+                            voiceID: host == `Mike` ? mikeVoice : jessicaVoice,
                         })
                 }
                 return null

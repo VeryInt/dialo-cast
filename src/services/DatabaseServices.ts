@@ -151,6 +151,8 @@ const handlers = {
                     success: true,
                     data: {
                         ...dialogue,
+                        dialogue_list: dialogue?.data || [],
+                        audioFilePath: dialogue?.audioFiles?.[0]?.filePath,
                     },
                 }
             } else {
@@ -175,9 +177,18 @@ const handlers = {
         }
         try {
             const list = await dialogueDatabaseService.getDialogueList(page, pageSize)
+
             return {
                 success: true,
-                data: list,
+                data: list?.length
+                    ? _.map(list, item => {
+                          return {
+                              ...item,
+                              dialogue_list: item?.data || [],
+                              audioFilePath: item?.audioFiles?.[0]?.filePath,
+                          }
+                      })
+                    : [],
             }
         } catch (err) {
             error = {
