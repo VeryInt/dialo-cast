@@ -7,6 +7,7 @@ import { electronServices } from '../services'
 import Settings from './pages/Settings'
 import Sidebar from './components/SideBar'
 import PodcastLibrary from './pages/PodcastLibrary'
+import AudioSamples from './pages/AudioSamples'
 // import { databaseService } from '../services/DatabaseService_reference'; // 引入 databaseService
 
 const Main = () => {
@@ -41,6 +42,7 @@ const Main = () => {
                     {<MainInterface className={`${currentPage == 'main' ? '' : 'hidden'}`} />}
                     {currentPage == 'settings' && <Settings />}
                     {currentPage == 'podcastLibrary' && <PodcastLibrary />}
+                    {currentPage == 'audioSamples' && <AudioSamples />}
                 </div>
             </div>
         </div>

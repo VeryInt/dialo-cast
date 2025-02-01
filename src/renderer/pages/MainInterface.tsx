@@ -146,9 +146,9 @@ const VoiceSelection = React.memo(({ className }: { className?: string }) => {
     // 缓存音色选项列表
     const voiceOptions = useMemo(
         () =>
-            _.map(voicePresets, ({ desc, value }) => (
+            _.map(voicePresets, ({ title, value }) => (
                 <SelectItem key={value} value={value}>
-                    {desc}
+                    {title}
                 </SelectItem>
             )),
         [] // voicePresets 为静态数据时使用空依赖

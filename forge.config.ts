@@ -22,7 +22,7 @@ const config: ForgeConfig = {
         new WebpackPlugin({
             mainConfig,
             devContentSecurityPolicy:
-                "default-src 'self' 'unsafe-inline' data:; media-src 'self' blob:; script-src 'self' 'unsafe-eval'; connect-src 'self'",
+                "default-src 'self' 'unsafe-inline' data:; media-src *.minimax.chat 'self' blob:; script-src 'self' 'unsafe-eval'; connect-src 'self'",
             renderer: {
                 config: rendererConfig,
                 entryPoints: [
