@@ -524,7 +524,7 @@ const fetchMinMaxAudioBatch = async (dialogueList: Record<string, any>[]) => {
         electronServices.getConfig(CONFIG_STORE_KEYS.hostVoiceTwo) as Promise<VoicePresetValues>,
     ])
 
-    mikeVoice = mikeVoice || voicePresets.maleQnJingyingBeta.value
+    mikeVoice = mikeVoice || voicePresets.maleQnJingyingJingpin.value
     jessicaVoice = jessicaVoice || voicePresets.attractiveGirl.value
     // 每一批需要等待上一批全部返回之后才能继续
     const fetchAwaitList = _.map(_.chunk(dialogueList, 10), chunkItem => {
