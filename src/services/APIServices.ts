@@ -1,5 +1,6 @@
 import { ipcMain } from 'electron'
 import OpenAI from 'openai'
+import { ChatCompletionCreateParamsNonStreaming } from 'openai/resources/chat/completions'
 import {
     PODCAST_EXPERT_PROMPT,
     EMOTION_MAP,
@@ -31,26 +32,54 @@ const handlers = {
                 { role: 'system', content: isEnglish ? ENG_PODCAST_EXPERT_PROMPT : PODCAST_EXPERT_PROMPT },
                 { role: 'user', content: topic },
             ]
+            console.log(`🐹🐹🐹 requestJson`, requestJson)
+            let completionBody: ChatCompletionCreateParamsNonStreaming = {
+                messages: messages,
+                model: modelName,
+                max_tokens: 30720,
+            }
             if (requestJson) {
                 console.log(`🐹🐹🐹 start fetchDialogue`)
                 const completion = await openai.beta.chat.completions.parse({
-                    messages: messages,
-                    model: modelName,
-                    max_tokens: 30720,
+                    ...completionBody,
                     response_format: { type: 'json_schema', json_schema: PODCAST_JSON_SCHEMA },
                 })
                 const event = completion.choices[0].message?.parsed
                 const { dialogueList, title } = extractJsonFromObject(event)
                 return { dialogueList, title }
             } else {
+                const isWebSearch = false // false/true
+                if (isWebSearch) {
+                    completionBody = {
+                        ...completionBody,
+                        tool_choice: 'auto',
+                        tools: [
+                            {
+                                // @ts-ignore
+                                type: 'web_search',
+                            },
+                        ],
+                    }
+                }
                 const completion = await openai.chat.completions.create({
-                    messages: messages,
-                    model: modelName,
-                    max_tokens: 30720,
+                    ...completionBody,
                 })
-                console.log(`🐹🐹🐹 completion?.choices[0]?.message?.content`, completion?.choices[0]?.message?.content)
-                const { dialogueList, title } = extractJsonFromText(completion?.choices[0]?.message?.content)
-                return { dialogueList, title }
+                // @ts-ignore
+                const resultMessages = completion.choices[0]?.messages as Record<string, any>[]
+
+                console.log(
+                    `🐹🐹🐹 completion?.choices[0]?.message?.content`,
+                    completion?.choices[0]?.message?.content,
+                    resultMessages
+                )
+                if (resultMessages?.length) {
+                    const content = resultMessages[resultMessages.length - 1]?.content
+                    const { dialogueList, title } = extractJsonFromText(content)
+                    return { dialogueList, title }
+                } else {
+                    const { dialogueList, title } = extractJsonFromText(completion?.choices[0]?.message?.content)
+                    return { dialogueList, title }
+                }
             }
         } catch (error) {
             console.log('Error fetching dialogue:', error)
