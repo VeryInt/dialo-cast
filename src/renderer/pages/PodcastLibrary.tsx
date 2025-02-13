@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Play, Trash2 } from 'lucide-react'
 import { electronServices } from '../../services'
 import AudioPlayer from '../components/AudioPlayer'
+import MediaAudio from '../components/MediaAudio'
 import dayjs from 'dayjs'
 import _ from 'lodash'
 
@@ -49,63 +50,66 @@ export default function PodcastLibrary() {
     }
 
     return (
-        <div className="container flex flex-col mx-auto max-w-6xl mb-10">
-            <AudioPlayer audioFileName={audioFileName} className={`mb-4 relative`} />
-            <Card className=" border-gray-100 shadow-xl p-6 w-full mx-auto">
-                <CardHeader className="pt-0">
-                    <CardTitle>播客库</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow className="border-gray-500 !border-b-2">
-                                {_.map(headTextList, (ht, ht_index) => {
+        <>
+            <div className="container flex flex-col mx-auto max-w-6xl mb-10">
+                {/* <AudioPlayer audioFileName={audioFileName} className={`mb-4 relative`} /> */}
+                <MediaAudio audioFileName={audioFileName} className={`mb-4 relative`} />
+                <Card className=" border-gray-100 shadow-xl p-6 w-full mx-auto">
+                    <CardHeader className="pt-0">
+                        <CardTitle>播客库</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="border-gray-500 !border-b-2">
+                                    {_.map(headTextList, (ht, ht_index) => {
+                                        return (
+                                            <TableHead
+                                                key={`podcast_table_${ht_index}`}
+                                                className={
+                                                    ht_index == headTextList.length - 1
+                                                        ? `flex items-center justify-end pr-6`
+                                                        : ''
+                                                }
+                                            >
+                                                {ht}
+                                            </TableHead>
+                                        )
+                                    })}
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody className="text-gray-700">
+                                {_.map(podcasts, (podcast, podcastIndex) => {
+                                    const { id, title, date, type } = podcast || {}
                                     return (
-                                        <TableHead
-                                            key={`podcast_table_${ht_index}`}
-                                            className={
-                                                ht_index == headTextList.length - 1
-                                                    ? `flex items-center justify-end pr-6`
-                                                    : ''
-                                            }
-                                        >
-                                            {ht}
-                                        </TableHead>
+                                        <TableRow key={`podcast_${podcastIndex}`} className="border-gray-300">
+                                            <TableCell title={title}>
+                                                <div className="flex items-center font-bold line-clamp-1 min-w-36 min-h-10 align-middle">
+                                                    {title}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>{type}</TableCell>
+                                            <TableCell>{date}</TableCell>
+                                            <TableCell>
+                                                <div className="flex space-x-2 justify-end pr-4 ">
+                                                    <Play
+                                                        className="w-4 h-4 cursor-pointer transition-transform active:scale-90"
+                                                        onClick={() => handlePlay(id)}
+                                                    />
+                                                    <Trash2
+                                                        className="w-4 h-4 cursor-pointer"
+                                                        onClick={() => handleDelete(id)}
+                                                    />
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
                                     )
                                 })}
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody className="text-gray-700">
-                            {_.map(podcasts, (podcast, podcastIndex) => {
-                                const { id, title, date, type } = podcast || {}
-                                return (
-                                    <TableRow key={`podcast_${podcastIndex}`} className="border-gray-300">
-                                        <TableCell title={title}>
-                                            <div className="flex items-center font-bold line-clamp-1 min-w-36 min-h-10 align-middle">
-                                                {title}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>{type}</TableCell>
-                                        <TableCell>{date}</TableCell>
-                                        <TableCell>
-                                            <div className="flex space-x-2 justify-end pr-4 ">
-                                                <Play
-                                                    className="w-4 h-4 cursor-pointer transition-transform active:scale-90"
-                                                    onClick={() => handlePlay(id)}
-                                                />
-                                                <Trash2
-                                                    className="w-4 h-4 cursor-pointer"
-                                                    onClick={() => handleDelete(id)}
-                                                />
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                )
-                            })}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
-        </div>
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+            </div>
+        </>
     )
 }

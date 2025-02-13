@@ -25,6 +25,7 @@ import {
 } from '../../shared/constants'
 import DialogDisplay from '../components/DialogDisplay'
 import AudioPlayer from '../components/AudioPlayer'
+import MediaAudio from '../components/MediaAudio'
 import readPDF from '../../shared/readPDF'
 
 import _ from 'lodash'
@@ -111,6 +112,7 @@ export default function MainInterface({ className }: { className?: string }) {
                 </Tabs>
             </div>
             <AudioPlayer audioFileName={audioPlayFile} />
+            <MediaAudio audioFileName={audioPlayFile} useSutro={true} />
             {dialogueList?.length ? (
                 <div className="border-gray-100 bg-white rounded-2xl shadow-xl py-8 w-full mx-auto text-sm">
                     <DialogDisplay conversationList={dialogueList} className="max-h-[28rem] overflow-y-auto mx-6" />
