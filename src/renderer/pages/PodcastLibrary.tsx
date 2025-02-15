@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table'
-import { Play, Trash2 } from 'lucide-react'
+import { Play, Trash2, Download } from 'lucide-react'
 import { electronServices } from '../../services'
 import AudioPlayer from '../components/AudioPlayer'
 import MediaAudio from '../components/MediaAudio'
 import dayjs from 'dayjs'
 import _ from 'lodash'
+import AlertPopup from '../components/AlertPopup'
 
 const headTextList = [`标题`, `类型`, `日期`, `操作`]
 
@@ -14,6 +15,12 @@ export default function PodcastLibrary({ className }: { className?: string }) {
     const [isPlaying, setIsPlaying] = useState(false)
     const [podcasts, setPodcasts] = useState([])
     const [audioFileName, setAudioFileName] = useState('')
+    const [showConfirm, setShowConfirm] = useState(false)
+    const [deleteId, setDeleteId] = useState(null)
+
+    const downloadRef = useRef(null)
+
+    console.log(`showConfirm`, showConfirm)
 
     useEffect(() => {
         const getStoredPodcasts = async () => {
@@ -46,7 +53,35 @@ export default function PodcastLibrary({ className }: { className?: string }) {
     }
 
     const handleDelete = (id: number) => {
-        setPodcasts(podcasts.filter(podcast => podcast.id !== id))
+        // electronServices.databaseDelDialogue(id)
+        // setPodcasts(podcasts.filter(podcast => podcast.id !== id))
+        setShowConfirm(true)
+        setDeleteId(id)
+    }
+
+    const handleConfirmDelete = () => {
+        electronServices.databaseDelDialogue(deleteId)
+        setPodcasts(podcasts.filter(podcast => podcast.id !== deleteId))
+        setShowConfirm(false)
+        setDeleteId(null)
+    }
+
+    const handleDownloadAudio = async (id: number) => {
+        console.log(`handleDownloadAudio`)
+        const currentPodcast = _.find(podcasts, p => p.id == id)
+        console.log(`currentPodcast`, currentPodcast)
+        const { title, audioFilePath } = currentPodcast || {}
+        if (audioFilePath) {
+            const buffer: Buffer = await electronServices.readAudioFile(audioFilePath)
+            const blob = new Blob([buffer], { type: 'audio/mpeg' })
+            const url = URL.createObjectURL(blob)
+            const downloadElement = downloadRef?.current as HTMLAnchorElement
+            if (downloadElement) {
+                downloadElement.download = `${title}.mp3`
+                downloadElement.href = url
+                downloadElement.click()
+            }
+        }
     }
 
     return (
@@ -93,7 +128,11 @@ export default function PodcastLibrary({ className }: { className?: string }) {
                                                 <TableCell>{type}</TableCell>
                                                 <TableCell>{date}</TableCell>
                                                 <TableCell>
-                                                    <div className="flex space-x-2 justify-end pr-4 ">
+                                                    <div className="flex space-x-4 justify-end pr-1 ">
+                                                        <Download
+                                                            className={`w-4 h-4 cursor-pointer `}
+                                                            onClick={() => handleDownloadAudio(id)}
+                                                        />
                                                         <Play
                                                             className="w-4 h-4 cursor-pointer transition-transform active:scale-90"
                                                             onClick={() => handlePlay(id)}
@@ -111,7 +150,20 @@ export default function PodcastLibrary({ className }: { className?: string }) {
                             </Table>
                         </CardContent>
                     </Card>
+                    <div className="hidden">
+                        <a ref={downloadRef} download="filename.mp3" className="hidden"></a>
+                    </div>
                 </div>
+
+                <AlertPopup
+                    isOpen={showConfirm}
+                    title={`确认删除`}
+                    content={`确认删除该播客吗？ ${_.find(podcasts, p => p.id == deleteId)?.title}`}
+                    onCancel={() => setShowConfirm(false)}
+                    onConfirm={handleConfirmDelete}
+                    cancelText="取消"
+                    confirmText="确认"
+                />
             </div>
         </>
     )

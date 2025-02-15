@@ -45,7 +45,13 @@ export default function MediaAudio({
                         width: '100%',
                     }}
                 >
-                    <audio ref={audioRef} slot="media" src={audioUrl || ''} playsInline crossOrigin="anonymous"></audio>
+                    <audio
+                        ref={audioRef}
+                        slot="media"
+                        src={audioUrl || '#'}
+                        playsInline
+                        crossOrigin="anonymous"
+                    ></audio>
                 </MediaThemeSutroAudio>
             ) : (
                 <MediaThemeTailwindAudio
@@ -54,7 +60,13 @@ export default function MediaAudio({
                         // @ts-ignore
                     }}
                 >
-                    <audio ref={audioRef} slot="media" src={audioUrl || ''} playsInline crossOrigin="anonymous"></audio>
+                    <audio
+                        ref={audioRef}
+                        slot="media"
+                        src={audioUrl || '#'}
+                        playsInline
+                        crossOrigin="anonymous"
+                    ></audio>
                 </MediaThemeTailwindAudio>
             )}
         </div>
