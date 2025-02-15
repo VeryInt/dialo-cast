@@ -44,7 +44,7 @@ import AudioPlayer from '../components/AudioPlayer'
 import MediaAudio from '../components/MediaAudio'
 import readPDF from '../../shared/readPDF'
 import { motion, AnimatePresence } from 'framer-motion'
-import { PodcastConversation, demoMessages } from '../components/PodcastConversation'
+import PodcastConversation from '../components/PodcastConversation'
 
 import _ from 'lodash'
 const demoDialogue = [
@@ -123,6 +123,7 @@ export default function MainInterface({ className }: { className?: string }) {
     }
 
     const handleGenerate = async () => {
+        if (isGenerating) return
         updateIsGenerating(true)
         let topicContent = castTopic
         if (activeTab == DIALOGUE_TYPE.PRODUCT_ITINERARY) {
@@ -184,7 +185,7 @@ export default function MainInterface({ className }: { className?: string }) {
             <div className={`flex flex-1 overflow-y-hidden w-full flex-col gap-6 min-w-md `}>
                 <div className={`grid grid-cols-12 gap-6 overflow-y-scroll`}>
                     {/* 左侧主要内容区 */}
-                    <div className="col-span-12 lg:col-span-8 space-y-6">
+                    <div className="col-span-12 lg:col-span-8 space-y-4">
                         <Card className="border-none shadow-lg">
                             <CardContent className="p-6">
                                 <Tabs
@@ -242,7 +243,7 @@ export default function MainInterface({ className }: { className?: string }) {
                     {/* 右侧控制面板 */}
                     <div className="col-span-12 lg:col-span-4 space-y-4 lg:h-0 lg:relative">
                         <Card className="border-none shadow-lg lg:float-right lg:w-full">
-                            <CardContent className="p-6 space-y-6">
+                            <CardContent className="p-6 lg:space-y-6 space-y-2">
                                 <motion.div
                                     initial={{ opacity: 0, x: 20 }}
                                     animate={{ opacity: 1, x: 0 }}
@@ -286,26 +287,32 @@ export default function MainInterface({ className }: { className?: string }) {
                                     onClick={handleGenerate}
                                     whileHover={{ scale: 1.01 }}
                                     whileTap={{ scale: 0.98 }}
-                                    className="w-full py-3 cursor-pointer bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-lg font-medium flex items-center justify-center gap-2 shadow-lg"
+                                    disabled={!castTopic || isGenerating}
+                                    className={`w-full py-3  text-white rounded-lg font-medium flex items-center justify-center gap-2 shadow-lg ${!castTopic || isGenerating ? ' cursor-not-allowed bg-gray-500' : 'cursor-pointer bg-gradient-to-r from-gray-600 to-gray-700'}`}
                                 >
-                                    <Wand2 className="w-5 h-5" />
-                                    开始生成
+                                    {isGenerating ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                            <span>{generatingStatus}</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Wand2 className="w-5 h-5" />
+                                            <span>开始生成</span>
+                                        </>
+                                    )}
                                 </motion.button>
                             </CardContent>
                         </Card>
                     </div>
 
-                    <div className="col-span-12 space-y-4 lg:col-span-8">
+                    <div className="col-span-12 space-y-4 lg:col-span-8 lg:flex-1 lg:overflow-y-scroll mb-4 lg:min-h-[30rem]">
                         <MediaAudio audioFileName={audioPlayFile} useSutro={true} />
                         {dialogueList?.length ? (
-                            <div className="border-gray-100 bg-white rounded-2xl shadow-xl py-8 w-full mx-auto text-sm">
-                                <DialogDisplay
-                                    conversationList={dialogueList}
-                                    className="max-h-[28rem] overflow-y-auto mx-6"
-                                />
+                            <div className="border-gray-100 bg-white rounded-2xl mb-4 mr-4 shadow-lg py-8 px-4 w-full text-sm ">
+                                <PodcastConversation messages={dialogueList} />
                             </div>
                         ) : null}
-                        <PodcastConversation messages={demoMessages} />
                     </div>
                 </div>
             </div>

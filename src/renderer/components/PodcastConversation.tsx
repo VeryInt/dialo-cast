@@ -1,16 +1,13 @@
 import React from 'react'
 import { Clock } from 'lucide-react'
-
+import _ from 'lodash'
+import { EMOTION_MAP } from '../../shared/constants'
 type SpeakerColor = 'blue' | 'purple'
 
 interface PodcastMessage {
-    speaker: {
-        name: string
-        role: string
-        color: SpeakerColor
-    }
     content: string
-    timestamp: string
+    host: string
+    emotion: string
 }
 
 interface PodcastConversationProps {
@@ -82,41 +79,31 @@ const PodcastConversation = ({ title, episode, duration, messages, className = '
 
             {/* 对话内容 */}
             <div className="space-y-4">
-                {messages.map((message, index) => {
-                    const colors = getSpeakerColors(message.speaker.color)
+                {_.map(messages, (message, index) => {
+                    const { host, content, emotion } = message || {}
+                    const emotionText =
+                        EMOTION_MAP[emotion]?.value && EMOTION_MAP[emotion]?.desc
+                            ? `[${EMOTION_MAP[emotion].desc}]`
+                            : ''
+                    const colors = getSpeakerColors(index % 2 ? 'purple' : 'blue')
                     return (
                         <div key={index} className="group">
                             <div className="flex items-center gap-2 mb-1 px-4">
-                                <span className={`font-medium ${colors.light.name} ${colors.dark.name}`}>
-                                    {message.speaker.name}
-                                </span>
-                                <span className="text-sm text-gray-500 dark:text-gray-400">{message.speaker.role}</span>
-                                <span className="text-sm text-gray-400 dark:text-gray-500">{message.timestamp}</span>
+                                <span className={`font-medium ${colors.light.name} ${colors.dark.name}`}>{host}</span>
+                                <span className="text-sm text-gray-400 dark:text-gray-500">{emotionText}</span>
                             </div>
 
                             <div className="relative">
                                 <div
-                                    className={`
-                  p-4 rounded-xl
-                  ${colors.light.bg} ${colors.dark.bg}
-                  ${colors.light.border} ${colors.dark.border}
-                  border
-                  transition-colors duration-200
-                `}
+                                    className={`p-4 rounded-xl ${colors.light.bg} ${colors.dark.bg} ${colors.light.border} ${colors.dark.border}  border transition-colors duration-200 `}
                                 >
                                     <p className={`${colors.light.text} ${colors.dark.text} leading-relaxed`}>
-                                        {message.content}
+                                        {content}
                                     </p>
                                 </div>
                                 {/* Hover 效果 */}
                                 <div
-                                    className={`
-                  absolute -inset-px rounded-xl
-                  bg-gradient-to-r ${colors.light.gradient} ${colors.dark.gradient}
-                  opacity-0 group-hover:opacity-100
-                  transition-opacity duration-200
-                  pointer-events-none
-                `}
+                                    className={` absolute -inset-px rounded-xl bg-gradient-to-r ${colors.light.gradient} ${colors.dark.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none `}
                                 />
                             </div>
                         </div>
@@ -127,77 +114,5 @@ const PodcastConversation = ({ title, episode, duration, messages, className = '
     )
 }
 
-// 示例数据
-const demoMessages: PodcastMessage[] = [
-    {
-        speaker: {
-            name: '王小明',
-            role: '主持人',
-            color: 'blue',
-        },
-        content:
-            '今天我们要讨论的是人工智能在日常生活中的应用。这个话题最近特别火热，相信大家都很感兴趣。张老师，您能先和我们分享一下您的观点吗？',
-        timestamp: '00:00',
-    },
-    {
-        speaker: {
-            name: '张教授',
-            role: '特邀嘉宾',
-            color: 'purple',
-        },
-        content:
-            '是的，人工智能确实正在深刻地改变我们的生活。从智能手机助手到自动驾驶，从医疗诊断到教育领域，我们都能看到AI的身影。不过我认为最重要的是要理性看待AI的发展，既要认识到它的潜力，也要明白它的局限性。',
-        timestamp: '00:45',
-    },
-    {
-        speaker: {
-            name: '王小明',
-            role: '主持人',
-            color: 'blue',
-        },
-        content: '说得很好。那您觉得普通人要如何更好地适应AI时代的到来呢？',
-        timestamp: '01:30',
-    },
-    {
-        speaker: {
-            name: '张教授',
-            role: '特邀嘉宾',
-            color: 'purple',
-        },
-        content:
-            '是的，人工智能确实正在深刻地改变我们的生活。从智能手机助手到自动驾驶，从医疗诊断到教育领域，我们都能看到AI的身影。不过我认为最重要的是要理性看待AI的发展，既要认识到它的潜力，也要明白它的局限性。',
-        timestamp: '00:45',
-    },
-    {
-        speaker: {
-            name: '王小明',
-            role: '主持人',
-            color: 'blue',
-        },
-        content: '说得很好。那您觉得普通人要如何更好地适应AI时代的到来呢？',
-        timestamp: '01:30',
-    },
-    {
-        speaker: {
-            name: '张教授',
-            role: '特邀嘉宾',
-            color: 'purple',
-        },
-        content:
-            '是的，人工智能确实正在深刻地改变我们的生活。从智能手机助手到自动驾驶，从医疗诊断到教育领域，我们都能看到AI的身影。不过我认为最重要的是要理性看待AI的发展，既要认识到它的潜力，也要明白它的局限性。',
-        timestamp: '00:45',
-    },
-    {
-        speaker: {
-            name: '王小明',
-            role: '主持人',
-            color: 'blue',
-        },
-        content: '说得很好。那您觉得普通人要如何更好地适应AI时代的到来呢？',
-        timestamp: '01:30',
-    },
-]
-
-// 导出组件和示例数据
-export { PodcastConversation, demoMessages }
+export default PodcastConversation
 export type { PodcastMessage, PodcastConversationProps }

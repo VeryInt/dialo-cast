@@ -617,6 +617,9 @@ If English input: Directly process
 Special Cases Handling
 Culture-specific terms: Add brief explanations in parentheses
 Untranslatable content: Preserve meaning over literal translation
+
+IMPORTANT NOTICE: 
+Since I am currently learning English, please try to use simple and easy-to-understand vocabulary!!! Thank you!
 `
 
 export const PODCAST_JSON_SCHEMA = {

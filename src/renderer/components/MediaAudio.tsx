@@ -35,47 +35,73 @@ export default function MediaAudio({
     }, [audioFileName])
 
     return (
-        <>
-            <Card className={` border-gray-100 p-6 w-full shadow-lg mx-auto ${className || ''}`}>
-                <CardHeader className="pt-0">
-                    <CardTitle>播客播放器</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4 pb-0 w-full">
-                    {useSutro ? (
-                        <MediaThemeSutroAudio
-                            style={{
-                                // @ts-ignore
-                                '--media-primary-color': '#fff',
-                                '--media-secondary-color': '#444',
-                                width: '100%',
-                            }}
-                        >
-                            <audio
-                                ref={audioRef}
-                                slot="media"
-                                src={audioUrl || ''}
-                                playsInline
-                                crossOrigin="anonymous"
-                            ></audio>
-                        </MediaThemeSutroAudio>
-                    ) : (
-                        <MediaThemeTailwindAudio
-                            style={{
-                                width: '100%',
-                                // @ts-ignore
-                            }}
-                        >
-                            <audio
-                                ref={audioRef}
-                                slot="media"
-                                src={audioUrl || ''}
-                                playsInline
-                                crossOrigin="anonymous"
-                            ></audio>
-                        </MediaThemeTailwindAudio>
-                    )}
-                </CardContent>
-            </Card>
-        </>
+        <div className={` ${className || ''}`}>
+            {useSutro ? (
+                <MediaThemeSutroAudio
+                    style={{
+                        // @ts-ignore
+                        '--media-primary-color': '#fff',
+                        '--media-secondary-color': '#444',
+                        width: '100%',
+                    }}
+                >
+                    <audio ref={audioRef} slot="media" src={audioUrl || ''} playsInline crossOrigin="anonymous"></audio>
+                </MediaThemeSutroAudio>
+            ) : (
+                <MediaThemeTailwindAudio
+                    style={{
+                        width: '100%',
+                        // @ts-ignore
+                    }}
+                >
+                    <audio ref={audioRef} slot="media" src={audioUrl || ''} playsInline crossOrigin="anonymous"></audio>
+                </MediaThemeTailwindAudio>
+            )}
+        </div>
     )
+
+    // return (
+    //     <>
+    //         <Card className={` border-gray-100 py-6 w-full shadow-lg mx-auto ${className || ''}`}>
+    //             <CardHeader className="pt-0">
+    //                 <CardTitle>播客播放器</CardTitle>
+    //             </CardHeader>
+    //             <CardContent className="space-y-4 pb-0 w-full">
+    //                 {useSutro ? (
+    //                     <MediaThemeSutroAudio
+    //                         style={{
+    //                             // @ts-ignore
+    //                             '--media-primary-color': '#fff',
+    //                             '--media-secondary-color': '#444',
+    //                             width: '100%',
+    //                         }}
+    //                     >
+    //                         <audio
+    //                             ref={audioRef}
+    //                             slot="media"
+    //                             src={audioUrl || ''}
+    //                             playsInline
+    //                             crossOrigin="anonymous"
+    //                         ></audio>
+    //                     </MediaThemeSutroAudio>
+    //                 ) : (
+    //                     <MediaThemeTailwindAudio
+    //                         style={{
+    //                             width: '100%',
+    //                             // @ts-ignore
+    //                         }}
+    //                     >
+    //                         <audio
+    //                             ref={audioRef}
+    //                             slot="media"
+    //                             src={audioUrl || ''}
+    //                             playsInline
+    //                             crossOrigin="anonymous"
+    //                         ></audio>
+    //                     </MediaThemeTailwindAudio>
+    //                 )}
+    //             </CardContent>
+    //         </Card>
+    //     </>
+    // )
 }
