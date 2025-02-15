@@ -37,13 +37,11 @@ const Main = () => {
             <div className="w-16 h-full z-50">
                 <Sidebar />
             </div>
-            <div className="flex-1 p-10 z-20">
-                <div className="flex flex-col min-w-lg w-full">
-                    {<MainInterface className={`${currentPage == 'main' ? '' : 'hidden'}`} />}
-                    {currentPage == 'settings' && <Settings />}
-                    {currentPage == 'podcastLibrary' && <PodcastLibrary />}
-                    {currentPage == 'audioSamples' && <AudioSamples />}
-                </div>
+            <div className="flex-1 z-20 min-w-lg ">
+                {<MainInterface className={`${currentPage == 'main' ? '' : 'hidden'}`} />}
+                {currentPage == 'settings' && <Settings />}
+                {currentPage == 'podcastLibrary' && <PodcastLibrary />}
+                {currentPage == 'audioSamples' && <AudioSamples />}
             </div>
         </div>
     )

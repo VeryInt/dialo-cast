@@ -140,6 +140,8 @@ body {
 input:focus,
 input:focus-visible,
 button:focus,
+textarea:focus,
+textarea:focus-visible,
 button:focus-visible {
     outline: none;
     --tw-ring-shadow: none;

@@ -51,12 +51,12 @@ export default function PodcastLibrary({ className }: { className?: string }) {
 
     return (
         <>
-            <div className={`container mx-auto p-4 ${className || ''}`}>
+            <div className={`container mx-auto p-4 h-full flex flex-col ${className || ''}`}>
                 <h1 className="text-2xl font-bold my-4">播客库</h1>
-                <div className="flex flex-col mb-10">
+                <div className="flex flex-col mb-10 flex-1 overflow-y-hidden gap-4">
                     {/* <AudioPlayer audioFileName={audioFileName} className={`mb-4 relative`} /> */}
                     <MediaAudio audioFileName={audioFileName} className={`mb-4 relative`} />
-                    <Card className=" border-gray-100 shadow-xl p-6 w-full mx-auto">
+                    <Card className=" border-none shadow-lg p-6 mb-2 w-full  mx-auto flex-1 overflow-y-scroll">
                         <CardHeader className="pt-0">
                             <CardTitle>播客库</CardTitle>
                         </CardHeader>

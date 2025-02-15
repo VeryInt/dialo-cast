@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
+import React, { useState, useRef, useEffect, useMemo, useCallback, act } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
@@ -10,7 +10,23 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Slider } from '../components/ui/slider'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../components/ui/collapsible'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
-import { Loader2, Play, Pause, SkipBack, SkipForward, Edit2, ChevronDown, ChevronUp, Download } from 'lucide-react'
+import {
+    Loader2,
+    Play,
+    Pause,
+    SkipBack,
+    SkipForward,
+    Edit2,
+    ChevronDown,
+    BookOpen,
+    ChevronUp,
+    Download,
+    Mic,
+    Package,
+    Upload,
+    Settings,
+    Wand2,
+} from 'lucide-react'
 import { useMainStore } from '../providers'
 import { electronServices } from '../../services'
 import { Switch } from '../components/ui/switch'
@@ -27,6 +43,8 @@ import DialogDisplay from '../components/DialogDisplay'
 import AudioPlayer from '../components/AudioPlayer'
 import MediaAudio from '../components/MediaAudio'
 import readPDF from '../../shared/readPDF'
+import { motion, AnimatePresence } from 'framer-motion'
+import { PodcastConversation, demoMessages } from '../components/PodcastConversation'
 
 import _ from 'lodash'
 const demoDialogue = [
@@ -71,58 +89,276 @@ const demoDialogue = [
         content: '没错。<#0.5#>能源价格上涨不仅影响了消费者，也对工业生产造成了压力',
     },
 ]
+
+// 切换功能 主题播客/产品行程/PDF
+const tabList = [
+    {
+        title: '主题播客',
+        icon: Mic,
+        key: DIALOGUE_TYPE.TOPIC,
+    },
+    {
+        title: '产品行程',
+        key: DIALOGUE_TYPE.PRODUCT_ITINERARY,
+        icon: Package,
+    },
+    {
+        title: 'PDF',
+        key: DIALOGUE_TYPE.PDF,
+        icon: Upload,
+    },
+]
 export default function MainInterface({ className }: { className?: string }) {
     const state = useMainStore(state => state)
+
     const [dialogueList, setDialogueList] = useState<any[]>([])
     const { audioPlayFile } = state || {}
-    const [activeTab, setActiveTab] = useState('topicCast')
+    const [activeTab, setActiveTab] = useState<DIALOGUE_TYPE>(DIALOGUE_TYPE.TOPIC)
+    const [isEnglish, setIsEnglish] = useState(false)
+    const [voiceSpeed, setVoiceSpeed] = useState(1)
+    const [generatingStatus, setGeneratingStatus] = useState(GeneratingSatus.DialogueGenerating)
+    const { castTopic, isGenerating, updateCastTopic, updateIsGenerating, updateAudioPlayFile } = state || {}
+    const handleUpdateTopic = topic => {
+        updateCastTopic(topic)
+    }
+
+    const handleGenerate = async () => {
+        updateIsGenerating(true)
+        let topicContent = castTopic
+        if (activeTab == DIALOGUE_TYPE.PRODUCT_ITINERARY) {
+            setGeneratingStatus(GeneratingSatus.FetchingItinerary)
+            const producItinerary = await electronServices.fetchProductDailyList({ productID: Number(castTopic) })
+            console.log(`producItinerary`, producItinerary)
+            topicContent = producItinerary
+        }
+
+        setGeneratingStatus(GeneratingSatus.DialogueGenerating)
+        const dialogueResult = await electronServices.fetchDialogue({ topic: topicContent, requestJson: false })
+        const { dialogueList, title: dialogueTitle } = dialogueResult || {}
+        setGeneratingStatus(GeneratingSatus.DialogueExtracting)
+        if (dialogueList?.length) {
+            setDialogueList(dialogueList)
+            setGeneratingStatus(GeneratingSatus.AudioRequesting)
+            const fetchResults = await fetchMinMaxAudioBatch(dialogueList)
+
+            // 直接通过合并 hex 生成
+            const now = Date.now()
+            setGeneratingStatus(GeneratingSatus.AudioSynthesizing)
+            const savedAudio = await electronServices.saveAudio(fetchResults.join(''), `${now}`)
+            updateAudioPlayFile(`${now}.mp3`)
+            const { filePath } = savedAudio || {}
+            const savedDialog = await electronServices.databaseSaveDialogue({
+                audioFilePath: filePath,
+                title: dialogueTitle || '',
+                keywords: activeTab == DIALOGUE_TYPE.PDF ? dialogueTitle : castTopic,
+                type: activeTab,
+                dialogue_list: dialogueList,
+            })
+            console.log(`savedDialog`, savedDialog)
+        }
+        updateIsGenerating(false)
+    }
+
+    const handleChangeVoiceSpeed = (value: number) => {
+        setVoiceSpeed(value)
+        electronServices.saveConfig(CONFIG_STORE_KEYS.voiceSpeed, value)
+    }
+
+    const handleChagneLanguage = isEnglish => {
+        setIsEnglish(isEnglish)
+        electronServices.saveConfig(CONFIG_STORE_KEYS.englishDialog, isEnglish)
+    }
+
+    useEffect(() => {
+        electronServices.getConfig(CONFIG_STORE_KEYS.englishDialog).then((isEnglish: boolean) => {
+            setIsEnglish(!!isEnglish)
+        })
+        electronServices.getConfig(CONFIG_STORE_KEYS.voiceSpeed).then((voiceSpeed: string) => {
+            setVoiceSpeed(Number(voiceSpeed || 1))
+        })
+    }, [])
+
     return (
-        <div className={`container mx-auto p-4 ${className || ''}`}>
-            <h1 className="text-2xl font-bold my-4">主界面</h1>
-            <div className={`flex w-full flex-col gap-6 min-w-md `}>
-                <div className="">
-                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                        <TabsList className="grid w-full grid-cols-3 gap-2 bg-gray-100 min-h-12 ">
-                            <TabsTrigger
-                                value="topicCast"
-                                className="flex items-center cursor-pointer h-8 data-[state=active]:bg-gray-600 data-[state=active]:font-bold data-[state=active]:text-white bg-gray-200 shadow-md"
-                            >
-                                主题播客
-                            </TabsTrigger>
-                            <TabsTrigger
-                                value="productItinerary"
-                                className="flex items-center cursor-pointer h-8 data-[state=active]:bg-gray-600 data-[state=active]:font-bold data-[state=active]:text-white bg-gray-200 shadow-md"
-                            >
-                                产品行程
-                            </TabsTrigger>
-                            <TabsTrigger
-                                value="PDFCast"
-                                className="flex items-center cursor-pointer h-8 data-[state=active]:bg-gray-600 data-[state=active]:font-bold data-[state=active]:text-white bg-gray-200 shadow-md"
-                            >
-                                PDF
-                            </TabsTrigger>
-                        </TabsList>
-                        <TabsContent value="topicCast">
-                            <PodcastGenerator callback={setDialogueList} />
-                        </TabsContent>
-                        <TabsContent value="productItinerary">
-                            <ProductCastGenerator callback={setDialogueList} />
-                        </TabsContent>
-                        <TabsContent value="PDFCast">
-                            <PDFPodcastGenerator />
-                        </TabsContent>
-                    </Tabs>
-                </div>
-                {/* <AudioPlayer audioFileName={audioPlayFile} /> */}
-                <MediaAudio audioFileName={audioPlayFile} useSutro={true} />
-                {dialogueList?.length ? (
-                    <div className="border-gray-100 bg-white rounded-2xl shadow-xl py-8 w-full mx-auto text-sm">
-                        <DialogDisplay conversationList={dialogueList} className="max-h-[28rem] overflow-y-auto mx-6" />
+        <div className={`container mx-auto p-4 flex flex-col h-full ${className || ''}`}>
+            <h1 className="text-2xl font-bold my-4">播客生成器</h1>
+            <div className={`flex flex-1 overflow-y-hidden w-full flex-col gap-6 min-w-md `}>
+                <div className={`grid grid-cols-12 gap-6 overflow-y-scroll`}>
+                    {/* 左侧主要内容区 */}
+                    <div className="col-span-12 lg:col-span-8 space-y-6">
+                        <Card className="border-none shadow-lg">
+                            <CardContent className="p-6">
+                                <Tabs
+                                    value={activeTab}
+                                    onValueChange={value => {
+                                        setActiveTab(value as DIALOGUE_TYPE)
+                                    }}
+                                    className="w-full"
+                                >
+                                    <TabsList className="grid w-full grid-cols-3 gap-2 bg-gray-100 min-h-10 rounded-lg ">
+                                        {_.map(tabList, ({ title, key, icon: Icon }) => {
+                                            return (
+                                                <motion.div
+                                                    key={key}
+                                                    whileHover={{ scale: 1.02 }}
+                                                    whileTap={{ scale: 0.98 }}
+                                                >
+                                                    <TabsTrigger
+                                                        value={key}
+                                                        className="w-full data-[state=active]:bg-white data-[state=active]:text-gray-600 cursor-pointer"
+                                                    >
+                                                        <Icon className="w-4 h-4 mr-2" />
+                                                        {title}
+                                                    </TabsTrigger>
+                                                </motion.div>
+                                            )
+                                        })}
+                                    </TabsList>
+                                    <TabsContent value={DIALOGUE_TYPE.TOPIC}>
+                                        {/* <PodcastGenerator callback={setDialogueList} /> */}
+                                        <PodcastTab
+                                            isCurrentTab={activeTab === DIALOGUE_TYPE.TOPIC}
+                                            callback={handleUpdateTopic}
+                                        />
+                                    </TabsContent>
+                                    <TabsContent value={DIALOGUE_TYPE.PRODUCT_ITINERARY}>
+                                        {/* <ProductCastGenerator callback={setDialogueList} /> */}
+                                        <ProductTab
+                                            isCurrentTab={activeTab === DIALOGUE_TYPE.PRODUCT_ITINERARY}
+                                            callback={handleUpdateTopic}
+                                        />
+                                    </TabsContent>
+                                    <TabsContent value={DIALOGUE_TYPE.PDF}>
+                                        {/* <PDFPodcastGenerator /> */}
+                                        <PDFTab
+                                            isCurrentTab={activeTab === DIALOGUE_TYPE.PDF}
+                                            callback={handleUpdateTopic}
+                                        />
+                                    </TabsContent>
+                                </Tabs>
+                            </CardContent>
+                        </Card>
                     </div>
-                ) : null}
+
+                    {/* 右侧控制面板 */}
+                    <div className="col-span-12 lg:col-span-4 space-y-4 lg:h-0 lg:relative">
+                        <Card className="border-none shadow-lg lg:float-right lg:w-full">
+                            <CardContent className="p-6 space-y-6">
+                                <motion.div
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    className="flex items-center justify-end gap-4"
+                                >
+                                    <div className="flex gap-1 items-center">
+                                        <BookOpen className="w-5 h-5 text-gray-800" />
+                                        <span className="text-gray-700">英语学习模式</span>
+                                        <Switch checked={isEnglish} onCheckedChange={handleChagneLanguage} />
+                                    </div>
+                                </motion.div>
+                                <motion.div whileHover={{ scale: 1 }} className="space-y-2">
+                                    <h3 className="font-semibold text-lg text-gray-800">声音设置</h3>
+                                    <VoiceSelection className="mt-1 mb-4" />
+                                </motion.div>
+                                <motion.div whileHover={{ scale: 1 }} className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-gray-800 font-semibold text-lg">语速控制</span>
+                                        <span className="text-sm text-gray-500">{voiceSpeed.toFixed(2)}</span>
+                                    </div>
+                                    <Slider
+                                        defaultValue={[1]}
+                                        max={2}
+                                        min={0.5}
+                                        step={0.05}
+                                        value={[voiceSpeed]}
+                                        onValueChange={([value]) => handleChangeVoiceSpeed(value)}
+                                        className="pt-3 pb-1"
+                                    />
+                                </motion.div>
+                                <motion.div whileHover={{ scale: 1 }} className="space-y-2">
+                                    <div>
+                                        <span className="text-gray-800 font-semibold text-lg">提示词优化（可选）</span>
+                                    </div>
+                                    <Textarea
+                                        placeholder="输入提示词以优化生成效果..."
+                                        className="min-h-[100px] bg-gray-50"
+                                    />
+                                </motion.div>
+                                <motion.button
+                                    onClick={handleGenerate}
+                                    whileHover={{ scale: 1.01 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    className="w-full py-3 cursor-pointer bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-lg font-medium flex items-center justify-center gap-2 shadow-lg"
+                                >
+                                    <Wand2 className="w-5 h-5" />
+                                    开始生成
+                                </motion.button>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    <div className="col-span-12 space-y-4 lg:col-span-8">
+                        <MediaAudio audioFileName={audioPlayFile} useSutro={true} />
+                        {dialogueList?.length ? (
+                            <div className="border-gray-100 bg-white rounded-2xl shadow-xl py-8 w-full mx-auto text-sm">
+                                <DialogDisplay
+                                    conversationList={dialogueList}
+                                    className="max-h-[28rem] overflow-y-auto mx-6"
+                                />
+                            </div>
+                        ) : null}
+                        <PodcastConversation messages={demoMessages} />
+                    </div>
+                </div>
             </div>
         </div>
     )
+
+    // return (
+    //     <div className={`container mx-auto p-4 ${className || ''}`}>
+    //         <h1 className="text-2xl font-bold my-4">主界面</h1>
+    //         <div className={`flex w-full flex-col gap-6 min-w-md `}>
+    //             <div className="">
+    //                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+    //                     <TabsList className="grid w-full grid-cols-3 gap-2 bg-gray-100 min-h-12 ">
+    //                         <TabsTrigger
+    //                             value="topicCast"
+    //                             className="flex items-center cursor-pointer h-8 data-[state=active]:bg-gray-600 data-[state=active]:font-bold data-[state=active]:text-white bg-gray-200 shadow-md"
+    //                         >
+    //                             主题播客
+    //                         </TabsTrigger>
+    //                         <TabsTrigger
+    //                             value="productItinerary"
+    //                             className="flex items-center cursor-pointer h-8 data-[state=active]:bg-gray-600 data-[state=active]:font-bold data-[state=active]:text-white bg-gray-200 shadow-md"
+    //                         >
+    //                             产品行程
+    //                         </TabsTrigger>
+    //                         <TabsTrigger
+    //                             value="PDFCast"
+    //                             className="flex items-center cursor-pointer h-8 data-[state=active]:bg-gray-600 data-[state=active]:font-bold data-[state=active]:text-white bg-gray-200 shadow-md"
+    //                         >
+    //                             PDF
+    //                         </TabsTrigger>
+    //                     </TabsList>
+    //                     <TabsContent value="topicCast">
+    //                         <PodcastGenerator callback={setDialogueList} />
+    //                     </TabsContent>
+    //                     <TabsContent value="productItinerary">
+    //                         <ProductCastGenerator callback={setDialogueList} />
+    //                     </TabsContent>
+    //                     <TabsContent value="PDFCast">
+    //                         <PDFPodcastGenerator />
+    //                     </TabsContent>
+    //                 </Tabs>
+    //             </div>
+    //             {/* <AudioPlayer audioFileName={audioPlayFile} /> */}
+    //             <MediaAudio audioFileName={audioPlayFile} useSutro={true} />
+    //             {dialogueList?.length ? (
+    //                 <div className="border-gray-100 bg-white rounded-2xl shadow-xl py-8 w-full mx-auto text-sm">
+    //                     <DialogDisplay conversationList={dialogueList} className="max-h-[28rem] overflow-y-auto mx-6" />
+    //                 </div>
+    //             ) : null}
+    //         </div>
+    //     </div>
+    // )
 }
 
 const VoiceSelection = React.memo(({ className }: { className?: string }) => {
@@ -161,7 +397,7 @@ const VoiceSelection = React.memo(({ className }: { className?: string }) => {
 
     return (
         <>
-            <div className={`grid grid-cols-2 gap-4 ${className}`}>
+            <div className={`grid grid-cols-2 lg:grid-rows-1 lg:grid-cols-1 gap-4 ${className}`}>
                 <div>
                     <label htmlFor="host1-voice" className="block text-sm font-medium text-gray-700 mb-1">
                         主持人 Mike 音色
@@ -188,6 +424,112 @@ const VoiceSelection = React.memo(({ className }: { className?: string }) => {
         </>
     )
 })
+
+const PodcastTab = ({ isCurrentTab, callback }: { isCurrentTab: boolean; callback: (content: string) => void }) => {
+    const [content, setContent] = useState('')
+    const handleChange = e => {
+        const value = e.target.value
+        setContent(value)
+        callback && callback(value)
+    }
+
+    useEffect(() => {
+        if (isCurrentTab) {
+            callback && callback(content || '')
+        }
+    }, [isCurrentTab])
+
+    return (
+        <Textarea
+            placeholder="请输入您想要讨论的播客主题..."
+            className="min-h-28 bg-gray-50"
+            value={content}
+            onChange={handleChange}
+        />
+    )
+}
+
+const ProductTab = ({ isCurrentTab, callback }: { isCurrentTab: boolean; callback: (content: string) => void }) => {
+    const [content, setContent] = useState('')
+    const handleUpdateProductID = e => {
+        const value = e.target.value
+        setContent(value)
+        callback && callback(value)
+    }
+
+    useEffect(() => {
+        if (isCurrentTab) {
+            callback && callback(content || '')
+        }
+    }, [isCurrentTab])
+
+    return <Input placeholder="输入产品ID" value={content} onChange={handleUpdateProductID} />
+}
+
+const PDFTab = ({ isCurrentTab, callback }: { isCurrentTab: boolean; callback: (content: string) => void }) => {
+    const [PDFFile, setPDFFile] = useState<Record<string, any>>({})
+    const [PDFContent, setPDFContent] = useState('')
+    const onDrop = useCallback(acceptedFiles => {
+        setPDFContent('')
+        const acceptedFile = acceptedFiles?.[0]
+        if (acceptedFile?.path) {
+            setPDFFile(acceptedFile)
+            const reader = new FileReader()
+
+            reader.onabort = () => console.log('file reading was aborted')
+            reader.onerror = () => console.log('file reading has failed')
+            reader.onload = async () => {
+                // Do whatever you want with the file contents
+                const binaryStr = reader.result
+                console.log(binaryStr)
+
+                const pdfContent = await readPDF(binaryStr)
+                setPDFContent(pdfContent)
+                callback && callback(pdfContent)
+            }
+            reader.readAsArrayBuffer(acceptedFile)
+        }
+        console.log(`acceptedFile`, acceptedFile)
+    }, [])
+
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({
+        onDrop,
+        maxFiles: 1,
+        accept: {
+            'application/pdf': ['.pdf'],
+        },
+    })
+
+    useEffect(() => {
+        if (isCurrentTab) {
+            callback && callback(PDFContent || '')
+        }
+    }, [isCurrentTab])
+
+    return (
+        <div
+            {...getRootProps()}
+            className=" bg-gray-200 rounded-2xl min-h-20 text-gray-700 text-sm font-bold flex items-center justify-center cursor-pointer"
+        >
+            <input {...getInputProps()} />
+            {PDFFile?.name ? (
+                <>
+                    <p>
+                        {PDFFile?.name || ''} - {PDFFile?.size > 0 ? (PDFFile.size / 1024).toFixed(0) + 'KB' : ''}
+                    </p>
+                </>
+            ) : isDragActive ? (
+                <p>将PDF拖到这里 ...</p>
+            ) : (
+                <p>
+                    拖拽PDF到这里，或
+                    <br />
+                    点击选择PDF文件
+                </p>
+            )}
+        </div>
+    )
+}
 
 const ProductCastGenerator = ({ callback }: { callback?: (dialogueList: Record<string, any>[]) => void }) => {
     const state = useMainStore(state => state)
@@ -226,7 +568,7 @@ const ProductCastGenerator = ({ callback }: { callback?: (dialogueList: Record<s
                 audioFilePath: filePath,
                 title: dialogueTitle || '',
                 keywords: castProductID,
-                type: DIALOGUE_TYPE.PRODUCTID,
+                type: DIALOGUE_TYPE.PRODUCT_ITINERARY,
                 dialogue_list: dialogueList,
             })
             console.log(`savedDialog`, savedDialog)

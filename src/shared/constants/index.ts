@@ -2,7 +2,7 @@ export const AUDIO_GAP_TEXT = `<#0.60#>`
 
 export const enum DIALOGUE_TYPE {
     TOPIC = 'topic',
-    PRODUCTID = 'productID',
+    PRODUCT_ITINERARY = 'productItinerary',
     PDF = 'pdf',
 }
 
@@ -12,6 +12,7 @@ export const CONFIG_STORE_KEYS = {
     hostVoiceOne: `HOST_VOICE_ONE`,
     hostVoiceTwo: `HOST_VOICE_TWO`,
     englishDialog: `IS_ENGLISH_DIALOG`,
+    voiceSpeed: `VOICE_SPEED`,
 }
 
 export const EMOTION_MAP = {

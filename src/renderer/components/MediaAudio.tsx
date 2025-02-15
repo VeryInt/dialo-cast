@@ -21,8 +21,12 @@ export default function MediaAudio({
             const buffer: Buffer = await electronServices.readAudioFile(audioFileName)
             const blob = new Blob([buffer], { type: 'audio/mpeg' })
             const url = URL.createObjectURL(blob)
-            setAudioUrl(url)
+            // setAudioUrl(url)
             const audioHtmlElement = audioRef.current as HTMLAudioElement
+            console.log(`audioHtmlElement`, audioHtmlElement, audioHtmlElement.currentTime)
+            audioHtmlElement.pause()
+            audioHtmlElement.src = url
+            audioHtmlElement.currentTime = 0
             audioHtmlElement.play()
         }
         if (audioFileName) {
@@ -32,7 +36,7 @@ export default function MediaAudio({
 
     return (
         <>
-            <Card className={` border-gray-100 shadow-xl p-6 w-full mx-auto ${className || ''}`}>
+            <Card className={` border-gray-100 p-6 w-full shadow-lg mx-auto ${className || ''}`}>
                 <CardHeader className="pt-0">
                     <CardTitle>播客播放器</CardTitle>
                 </CardHeader>

@@ -94,6 +94,7 @@ const handlers = {
     ) => {
         const apiKey = (getConfig(CONFIG_STORE_KEYS.miniMaxApiKey) as string) || process.env.MIN_MAX_API_KEY || ``
         const groundID = (getConfig(CONFIG_STORE_KEYS.miniMaxGroupID) as string) || process.env.MIN_MAX_GROUND_ID || ``
+        const voiceSpeed = Number(getConfig(CONFIG_STORE_KEYS.voiceSpeed) || 0) || 1.15
         const url = `https://api.minimax.chat/v1/t2a_v2?GroupId=${groundID}`
         console.log(`🐹🐹🐹fetchMinMaxAudio start`, content, emotion, voiceID)
         try {
@@ -107,7 +108,7 @@ const handlers = {
                 stream: false,
                 voice_setting: {
                     voice_id: voiceID || voicePresets.badaoShaoye.value,
-                    speed: 1.15, // 语速
+                    speed: voiceSpeed, // 语速
                     vol: 2, // 音量
                     pitch: -1, // 声调
                 },

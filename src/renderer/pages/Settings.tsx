@@ -41,9 +41,9 @@ export default function Settings({ className }: { className?: string }) {
     }
 
     return (
-        <div className={`container mx-auto p-4 ${className || ''}`}>
+        <div className={`container mx-auto p-4 flex flex-col h-full ${className || ''}`}>
             <h1 className="text-2xl font-bold my-4">设置</h1>
-            <div className="flex flex-col ">
+            <div className="flex flex-col flex-1 ">
                 <Card className=" border-gray-100 shadow-xl p-6 w-full mx-auto">
                     <CardHeader className="pt-0 text-xl">
                         <CardTitle>MiniMax API</CardTitle>

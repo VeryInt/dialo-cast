@@ -39,21 +39,23 @@ export default function AudioSamples() {
     }
 
     return (
-        <div className="container mx-auto p-4">
+        <div className="container mx-auto p-4 flex flex-col h-full">
             <h1 className="text-2xl font-bold my-4">语音演示</h1>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 my-4">
-                {_.map(voicePresets, (voicePreset, voicePresetKey) => {
-                    const { title, value, desc, tags } = voicePreset || {}
-                    const isPlaying = playing === voicePresetKey
+            <div className="flex-1 overflow-y-scroll">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 my-4 ">
+                    {_.map(voicePresets, (voicePreset, voicePresetKey) => {
+                        const { title, value, desc, tags } = voicePreset || {}
+                        const isPlaying = playing === voicePresetKey
 
-                    return (
-                        <AudioDemoCard
-                            demo={{ ...voicePreset, voicePresetKey }}
-                            isPlaying={isPlaying}
-                            onPlay={handlePlayDemo}
-                        />
-                    )
-                })}
+                        return (
+                            <AudioDemoCard
+                                demo={{ ...voicePreset, voicePresetKey }}
+                                isPlaying={isPlaying}
+                                onPlay={handlePlayDemo}
+                            />
+                        )
+                    })}
+                </div>
             </div>
         </div>
     )
