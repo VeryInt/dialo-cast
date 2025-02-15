@@ -10,7 +10,7 @@ import _ from 'lodash'
 
 const headTextList = [`标题`, `类型`, `日期`, `操作`]
 
-export default function PodcastLibrary() {
+export default function PodcastLibrary({ className }: { className?: string }) {
     const [isPlaying, setIsPlaying] = useState(false)
     const [podcasts, setPodcasts] = useState([])
     const [audioFileName, setAudioFileName] = useState('')
@@ -51,64 +51,67 @@ export default function PodcastLibrary() {
 
     return (
         <>
-            <div className="container flex flex-col mx-auto max-w-6xl mb-10">
-                {/* <AudioPlayer audioFileName={audioFileName} className={`mb-4 relative`} /> */}
-                <MediaAudio audioFileName={audioFileName} className={`mb-4 relative`} />
-                <Card className=" border-gray-100 shadow-xl p-6 w-full mx-auto">
-                    <CardHeader className="pt-0">
-                        <CardTitle>播客库</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow className="border-gray-500 !border-b-2">
-                                    {_.map(headTextList, (ht, ht_index) => {
+            <div className={`container mx-auto p-4 ${className || ''}`}>
+                <h1 className="text-2xl font-bold my-4">播客库</h1>
+                <div className="flex flex-col mb-10">
+                    {/* <AudioPlayer audioFileName={audioFileName} className={`mb-4 relative`} /> */}
+                    <MediaAudio audioFileName={audioFileName} className={`mb-4 relative`} />
+                    <Card className=" border-gray-100 shadow-xl p-6 w-full mx-auto">
+                        <CardHeader className="pt-0">
+                            <CardTitle>播客库</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow className="border-gray-500 !border-b-2">
+                                        {_.map(headTextList, (ht, ht_index) => {
+                                            return (
+                                                <TableHead
+                                                    key={`podcast_table_${ht_index}`}
+                                                    className={
+                                                        ht_index == headTextList.length - 1
+                                                            ? `flex items-center justify-end pr-6`
+                                                            : ''
+                                                    }
+                                                >
+                                                    {ht}
+                                                </TableHead>
+                                            )
+                                        })}
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody className="text-gray-700">
+                                    {_.map(podcasts, (podcast, podcastIndex) => {
+                                        const { id, title, date, type } = podcast || {}
                                         return (
-                                            <TableHead
-                                                key={`podcast_table_${ht_index}`}
-                                                className={
-                                                    ht_index == headTextList.length - 1
-                                                        ? `flex items-center justify-end pr-6`
-                                                        : ''
-                                                }
-                                            >
-                                                {ht}
-                                            </TableHead>
+                                            <TableRow key={`podcast_${podcastIndex}`} className="border-gray-300">
+                                                <TableCell title={title}>
+                                                    <div className="flex items-center font-bold line-clamp-1 min-w-36 min-h-10 align-middle">
+                                                        {title}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>{type}</TableCell>
+                                                <TableCell>{date}</TableCell>
+                                                <TableCell>
+                                                    <div className="flex space-x-2 justify-end pr-4 ">
+                                                        <Play
+                                                            className="w-4 h-4 cursor-pointer transition-transform active:scale-90"
+                                                            onClick={() => handlePlay(id)}
+                                                        />
+                                                        <Trash2
+                                                            className="w-4 h-4 cursor-pointer"
+                                                            onClick={() => handleDelete(id)}
+                                                        />
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
                                         )
                                     })}
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody className="text-gray-700">
-                                {_.map(podcasts, (podcast, podcastIndex) => {
-                                    const { id, title, date, type } = podcast || {}
-                                    return (
-                                        <TableRow key={`podcast_${podcastIndex}`} className="border-gray-300">
-                                            <TableCell title={title}>
-                                                <div className="flex items-center font-bold line-clamp-1 min-w-36 min-h-10 align-middle">
-                                                    {title}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell>{type}</TableCell>
-                                            <TableCell>{date}</TableCell>
-                                            <TableCell>
-                                                <div className="flex space-x-2 justify-end pr-4 ">
-                                                    <Play
-                                                        className="w-4 h-4 cursor-pointer transition-transform active:scale-90"
-                                                        onClick={() => handlePlay(id)}
-                                                    />
-                                                    <Trash2
-                                                        className="w-4 h-4 cursor-pointer"
-                                                        onClick={() => handleDelete(id)}
-                                                    />
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    )
-                                })}
-                            </TableBody>
-                        </Table>
-                    </CardContent>
-                </Card>
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         </>
     )

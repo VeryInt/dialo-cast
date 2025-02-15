@@ -33,11 +33,11 @@ const Main = () => {
     // }, []);
 
     return (
-        <div className="flex flex-row w-full h-full bg-gray-300 min-w-fit">
-            <div className="w-16 h-full">
+        <div className="flex flex-row w-full h-full bg-gray-200 min-w-fit">
+            <div className="w-16 h-full z-50">
                 <Sidebar />
             </div>
-            <div className="flex-1 p-10">
+            <div className="flex-1 p-10 z-20">
                 <div className="flex flex-col min-w-lg w-full">
                     {<MainInterface className={`${currentPage == 'main' ? '' : 'hidden'}`} />}
                     {currentPage == 'settings' && <Settings />}

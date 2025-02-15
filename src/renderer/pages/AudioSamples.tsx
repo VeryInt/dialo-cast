@@ -40,6 +40,7 @@ export default function AudioSamples() {
 
     return (
         <div className="container mx-auto p-4">
+            <h1 className="text-2xl font-bold my-4">语音演示</h1>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 my-4">
                 {_.map(voicePresets, (voicePreset, voicePresetKey) => {
                     const { title, value, desc, tags } = voicePreset || {}
@@ -52,49 +53,6 @@ export default function AudioSamples() {
                             onPlay={handlePlayDemo}
                         />
                     )
-                    // return (
-                    //     <Card
-                    //         key={`voice_${voicePresetKey}`}
-                    //         className={` shadow-lg relative overflow-hidden transition-colors hover:bg-accent cursor-pointer min-h-28  border-none ${
-                    //             isPlaying ? '!bg-gray-700 text-white' : ''
-                    //         }`}
-                    //         onClick={() => handlePlayDemo(voicePresetKey)}
-                    //     >
-                    //         <CardContent className="p-4">
-                    //             <div className="flex items-center justify-between mb-2">
-                    //                 <h3 className="text-lg font-semibold">{title}</h3>
-                    //                 <div className="h-8 p-0 flex w-fit items-center gap-1">
-                    //                     {isPlaying ? (
-                    //                         <>
-                    //                             <span>暂停</span>
-                    //                             <Pause className="h-4 w-4" />
-                    //                         </>
-                    //                     ) : (
-                    //                         <>
-                    //                             <span>播放</span>
-                    //                             <Play className="h-4 w-4" />
-                    //                         </>
-                    //                     )}
-                    //                     <span className="sr-only">Play demo</span>
-                    //                 </div>
-                    //             </div>
-                    //             <div className="flex gap-1 mb-2">
-                    //                 {_.map(tags || [], (tag, tagIndex) => {
-                    //                     return (
-                    //                         <Badge key={`tag_${tagIndex}`} variant="secondary">
-                    //                             {tag}
-                    //                         </Badge>
-                    //                     )
-                    //                 })}
-                    //             </div>
-                    //             <p
-                    //                 className={`text-sm ${isPlaying ? 'text-primary-foreground' : 'text-muted-foreground'}`}
-                    //             >
-                    //                 {desc}
-                    //             </p>
-                    //         </CardContent>
-                    //     </Card>
-                    // )
                 })}
             </div>
         </div>

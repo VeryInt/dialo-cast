@@ -77,47 +77,50 @@ export default function MainInterface({ className }: { className?: string }) {
     const { audioPlayFile } = state || {}
     const [activeTab, setActiveTab] = useState('topicCast')
     return (
-        <div className={`flex w-full flex-col gap-6 max-w-3xl mx-auto min-w-md ${className || ''}`}>
-            <div className="">
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-3 gap-2 bg-gray-100 min-h-12 ">
-                        <TabsTrigger
-                            value="topicCast"
-                            className="flex items-center cursor-pointer h-8 data-[state=active]:bg-gray-600 data-[state=active]:font-bold data-[state=active]:text-white bg-gray-200 shadow-md"
-                        >
-                            主题播客
-                        </TabsTrigger>
-                        <TabsTrigger
-                            value="productItinerary"
-                            className="flex items-center cursor-pointer h-8 data-[state=active]:bg-gray-600 data-[state=active]:font-bold data-[state=active]:text-white bg-gray-200 shadow-md"
-                        >
-                            产品行程
-                        </TabsTrigger>
-                        <TabsTrigger
-                            value="PDFCast"
-                            className="flex items-center cursor-pointer h-8 data-[state=active]:bg-gray-600 data-[state=active]:font-bold data-[state=active]:text-white bg-gray-200 shadow-md"
-                        >
-                            PDF
-                        </TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="topicCast">
-                        <PodcastGenerator callback={setDialogueList} />
-                    </TabsContent>
-                    <TabsContent value="productItinerary">
-                        <ProductCastGenerator callback={setDialogueList} />
-                    </TabsContent>
-                    <TabsContent value="PDFCast">
-                        <PDFPodcastGenerator />
-                    </TabsContent>
-                </Tabs>
-            </div>
-            <AudioPlayer audioFileName={audioPlayFile} />
-            <MediaAudio audioFileName={audioPlayFile} useSutro={true} />
-            {dialogueList?.length ? (
-                <div className="border-gray-100 bg-white rounded-2xl shadow-xl py-8 w-full mx-auto text-sm">
-                    <DialogDisplay conversationList={dialogueList} className="max-h-[28rem] overflow-y-auto mx-6" />
+        <div className={`container mx-auto p-4 ${className || ''}`}>
+            <h1 className="text-2xl font-bold my-4">主界面</h1>
+            <div className={`flex w-full flex-col gap-6 min-w-md `}>
+                <div className="">
+                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                        <TabsList className="grid w-full grid-cols-3 gap-2 bg-gray-100 min-h-12 ">
+                            <TabsTrigger
+                                value="topicCast"
+                                className="flex items-center cursor-pointer h-8 data-[state=active]:bg-gray-600 data-[state=active]:font-bold data-[state=active]:text-white bg-gray-200 shadow-md"
+                            >
+                                主题播客
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="productItinerary"
+                                className="flex items-center cursor-pointer h-8 data-[state=active]:bg-gray-600 data-[state=active]:font-bold data-[state=active]:text-white bg-gray-200 shadow-md"
+                            >
+                                产品行程
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="PDFCast"
+                                className="flex items-center cursor-pointer h-8 data-[state=active]:bg-gray-600 data-[state=active]:font-bold data-[state=active]:text-white bg-gray-200 shadow-md"
+                            >
+                                PDF
+                            </TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="topicCast">
+                            <PodcastGenerator callback={setDialogueList} />
+                        </TabsContent>
+                        <TabsContent value="productItinerary">
+                            <ProductCastGenerator callback={setDialogueList} />
+                        </TabsContent>
+                        <TabsContent value="PDFCast">
+                            <PDFPodcastGenerator />
+                        </TabsContent>
+                    </Tabs>
                 </div>
-            ) : null}
+                {/* <AudioPlayer audioFileName={audioPlayFile} /> */}
+                <MediaAudio audioFileName={audioPlayFile} useSutro={true} />
+                {dialogueList?.length ? (
+                    <div className="border-gray-100 bg-white rounded-2xl shadow-xl py-8 w-full mx-auto text-sm">
+                        <DialogDisplay conversationList={dialogueList} className="max-h-[28rem] overflow-y-auto mx-6" />
+                    </div>
+                ) : null}
+            </div>
         </div>
     )
 }
