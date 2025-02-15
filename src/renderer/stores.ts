@@ -1,6 +1,6 @@
 import { createStore } from 'zustand/vanilla'
 import _ from 'lodash'
-import { NavPageValue } from '../shared/constants'
+import { NavPageValue } from '../shared/constants/renderer'
 
 type MainState = {
     isloading?: boolean

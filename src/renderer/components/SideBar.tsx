@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { cn } from '../lib/utils'
-import { navPages } from '../../shared/constants'
+import { navPages } from '../../shared/constants/renderer'
 import { useMainStore } from '../providers'
 import _ from 'lodash'
 

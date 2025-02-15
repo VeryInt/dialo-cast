@@ -1,5 +1,4 @@
 export const AUDIO_GAP_TEXT = `<#0.60#>`
-import { Home, Headphones, Settings, FileAudio, Podcast } from 'lucide-react'
 
 export const enum DIALOGUE_TYPE {
     TOPIC = 'topic',
@@ -14,21 +13,7 @@ export const CONFIG_STORE_KEYS = {
     hostVoiceTwo: `HOST_VOICE_TWO`,
     englishDialog: `IS_ENGLISH_DIALOG`,
 }
-type ExtractPropValues<T extends readonly any[], K extends string> = T[number] extends infer Item
-    ? Item extends { [P in K]: infer V }
-        ? V
-        : never
-    : never
 
-export const navPages = [
-    { icon: Home, label: '主界面', value: 'main' },
-    { icon: FileAudio, label: '音频示例', value: 'audioSamples' },
-    { icon: Podcast, label: '播客库', value: 'podcastLibrary' },
-    { icon: Settings, label: '设置', value: 'settings' },
-] as const
-
-// 提取所有 value 的类型（自动过滤没有 value 的项）
-export type NavPageValue = ExtractPropValues<typeof navPages, 'value'>
 export const EMOTION_MAP = {
     happy: { value: 'happy', desc: '高兴' },
     sad: { value: 'sad', desc: '悲伤' },
@@ -57,6 +42,9 @@ export const voicePresets = {
         value: 'male-qn-qingse',
         demo: '1f724442-d4b8-4889-9535-9d4340278b84.mp3',
         tags: ['男', '青年', '中文'],
+        ageGroup: '青年',
+        gender: '男',
+        language: '中文',
     },
     maleQnJingying: {
         title: '精英青年',
@@ -64,6 +52,9 @@ export const voicePresets = {
         value: 'male-qn-jingying',
         demo: '6a0da686-20a2-40af-a12e-002f265bd11e.mp3',
         tags: ['男', '青年', '中文'],
+        ageGroup: '青年',
+        gender: '男',
+        language: '中文',
     },
     maleQnBadao: {
         title: '霸道青年',
@@ -71,6 +62,9 @@ export const voicePresets = {
         value: 'male-qn-badao',
         demo: 'c460e3f5-e745-4587-a5de-2657a6a9821e.mp3',
         tags: ['男', '青年', '中文'],
+        ageGroup: '青年',
+        gender: '男',
+        language: '中文',
     },
     maleQnDaxuesheng: {
         title: '青年大学生',
@@ -78,6 +72,9 @@ export const voicePresets = {
         value: 'male-qn-daxuesheng',
         demo: '9c38026a-3bfc-4c2b-bbf1-ea14f5d095be.mp3',
         tags: ['男', '青年', '中文'],
+        ageGroup: '青年',
+        gender: '男',
+        language: '中文',
     },
     femaleShaonv: {
         title: '少女',
@@ -85,6 +82,9 @@ export const voicePresets = {
         value: 'female-shaonv',
         demo: 'a5734a27-d733-4cb2-bfe8-7ffd4a5221c6.mp3',
         tags: ['女', '青年', '中文'],
+        ageGroup: '青年',
+        gender: '女',
+        language: '中文',
     },
     femaleYujie: {
         title: '御姐',
@@ -92,6 +92,9 @@ export const voicePresets = {
         value: 'female-yujie',
         demo: 'f592eba5-f66d-4916-a8ba-90ad8e27d46c.mp3',
         tags: ['女', '青年', '中文'],
+        ageGroup: '青年',
+        gender: '女',
+        language: '中文',
     },
     femaleChengshu: {
         title: '成熟女性',
@@ -99,6 +102,9 @@ export const voicePresets = {
         value: 'female-chengshu',
         demo: 'ef660abb-c130-4641-9b2f-79c92a1b8dae.mp3',
         tags: ['女', '成年', '中文'],
+        ageGroup: '成年',
+        gender: '女',
+        language: '中文',
     },
     femaleTianmei: {
         title: '甜美女性',
@@ -106,6 +112,9 @@ export const voicePresets = {
         value: 'female-tianmei',
         demo: '4a147d57-36ae-4718-a0c0-3e7fe9a98fb8.mp3',
         tags: ['女', '青年', '中文'],
+        ageGroup: '青年',
+        gender: '女',
+        language: '中文',
     },
     presenterMale: {
         title: '男性主持人',
@@ -113,6 +122,9 @@ export const voicePresets = {
         value: 'presenter_male',
         demo: '801f6c65-8fe2-4c4e-8286-b6111170772a.mp3',
         tags: ['男', '成年', '中文'],
+        ageGroup: '成年',
+        gender: '男',
+        language: '中文',
     },
     presenterFemale: {
         title: '女性主持人',
@@ -120,6 +132,9 @@ export const voicePresets = {
         value: 'presenter_female',
         demo: '4fc302d7-8b21-4f0c-9765-f78d7687dee9.mp3',
         tags: ['女', '成年', '中文'],
+        ageGroup: '成年',
+        gender: '女',
+        language: '中文',
     },
     audiobookMale1: {
         title: '男性有声书1',
@@ -127,6 +142,9 @@ export const voicePresets = {
         value: 'audiobook_male_1',
         demo: 'f5bf216a-37ac-43e3-a341-709cb931d6ae.mp3',
         tags: ['男', '成年', '中文'],
+        ageGroup: '成年',
+        gender: '男',
+        language: '中文',
     },
     audiobookMale2: {
         title: '男性有声书2',
@@ -134,6 +152,9 @@ export const voicePresets = {
         value: 'audiobook_male_2',
         demo: 'cf89d86b-b543-4ca0-99fd-e1b27c90f687.mp3',
         tags: ['男', '成年', '中文'],
+        ageGroup: '成年',
+        gender: '男',
+        language: '中文',
     },
     audiobookFemale1: {
         title: '女性有声书1',
@@ -141,6 +162,9 @@ export const voicePresets = {
         value: 'audiobook_female_1',
         demo: 'fc395e4c-5981-41ae-86bc-4fa30f55d143.mp3',
         tags: ['女', '成年', '中文'],
+        ageGroup: '成年',
+        gender: '女',
+        language: '中文',
     },
     audiobookFemale2: {
         title: '女性有声书2',
@@ -148,6 +172,9 @@ export const voicePresets = {
         value: 'audiobook_female_2',
         demo: '903de7cf-bc29-4ff4-b388-2bb2f668ed26.mp3',
         tags: ['女', '成年', '中文'],
+        ageGroup: '成年',
+        gender: '女',
+        language: '中文',
     },
     maleQnQingseJingpin: {
         title: '青涩青年-beta',
@@ -155,6 +182,9 @@ export const voicePresets = {
         value: 'male-qn-qingse-jingpin',
         demo: '2aeb25de-9686-4a84-969e-7726c123ac8b.mp3',
         tags: ['男', '青年', '中文'],
+        ageGroup: '青年',
+        gender: '男',
+        language: '中文',
     },
     maleQnJingyingJingpin: {
         title: '精英青年-beta',
@@ -162,6 +192,9 @@ export const voicePresets = {
         value: 'male-qn-jingying-jingpin',
         demo: '1d946399-ae87-4ce9-b4d6-da186a6674be.mp3',
         tags: ['男', '青年', '中文'],
+        ageGroup: '青年',
+        gender: '男',
+        language: '中文',
     },
     maleQnBadaoJingpin: {
         title: '霸道青年-beta',
@@ -169,6 +202,9 @@ export const voicePresets = {
         value: 'male-qn-badao-jingpin',
         demo: '66fbd126-7f19-4548-875b-c95e37334db7.mp3',
         tags: ['男', '青年', '中文'],
+        ageGroup: '青年',
+        gender: '男',
+        language: '中文',
     },
     maleQnDaxueshengJingpin: {
         title: '青年大学生-beta',
@@ -176,6 +212,9 @@ export const voicePresets = {
         value: 'male-qn-daxuesheng-jingpin',
         demo: 'acdfc86c-9288-416d-8936-dde13c6aa351.mp3',
         tags: ['男', '青年', '中文'],
+        ageGroup: '青年',
+        gender: '男',
+        language: '中文',
     },
     femaleShaonvJingpin: {
         title: '少女-beta',
@@ -183,6 +222,9 @@ export const voicePresets = {
         value: 'female-shaonv-jingpin',
         demo: '2bbb1f3d-2aba-4975-81cb-bee8c642040a.mp3',
         tags: ['女', '青年', '中文'],
+        ageGroup: '青年',
+        gender: '女',
+        language: '中文',
     },
     femaleYujieJingpin: {
         title: '御姐-beta',
@@ -190,6 +232,9 @@ export const voicePresets = {
         value: 'female-yujie-jingpin',
         demo: '10e8e581-6a41-453c-9c6e-b07445253f32.mp3',
         tags: ['女', '青年', '中文'],
+        ageGroup: '青年',
+        gender: '女',
+        language: '中文',
     },
     femaleChengshuJingpin: {
         title: '成熟女性-beta',
@@ -197,6 +242,9 @@ export const voicePresets = {
         value: 'female-chengshu-jingpin',
         demo: '287eb2bb-6456-4e69-b5c2-ca25afc45618.mp3',
         tags: ['女', '成年', '中文'],
+        ageGroup: '成年',
+        gender: '女',
+        language: '中文',
     },
     femaleTianmeiJingpin: {
         title: '甜美女性-beta',
@@ -204,6 +252,9 @@ export const voicePresets = {
         value: 'female-tianmei-jingpin',
         demo: '22d9bcb3-70d8-4ed2-811d-bc2face669f3.mp3',
         tags: ['女', '青年', '中文'],
+        ageGroup: '青年',
+        gender: '女',
+        language: '中文',
     },
     cleverBoy: {
         title: '聪明男童',
@@ -211,6 +262,9 @@ export const voicePresets = {
         value: 'clever_boy',
         demo: 'b364b7f9-1ef3-48c4-bf6b-b99454781d1f.mp3',
         tags: ['男', '儿童', '中文'],
+        ageGroup: '儿童',
+        gender: '男',
+        language: '中文',
     },
     cuteBoy: {
         title: '可爱男童',
@@ -218,6 +272,9 @@ export const voicePresets = {
         value: 'cute_boy',
         demo: '7c1d01fe-4558-4cb6-8e81-2bb77cd2c4aa.mp3',
         tags: ['男', '儿童', '中文'],
+        ageGroup: '儿童',
+        gender: '男',
+        language: '中文',
     },
     lovelyGirl: {
         title: '萌萌女童',
@@ -225,6 +282,9 @@ export const voicePresets = {
         value: 'lovely_girl',
         demo: '1692905f-e4e2-49fa-9ff4-3b8ec862c33a.mp3',
         tags: ['女', '儿童', '中文'],
+        ageGroup: '儿童',
+        gender: '女',
+        language: '中文',
     },
     cartoonPig: {
         title: '卡通猪小琪',
@@ -232,6 +292,9 @@ export const voicePresets = {
         value: 'cartoon_pig',
         demo: 'f07a92e2-d09d-4c17-9fcd-2567f9676792.mp3',
         tags: ['女', '儿童', '中文'],
+        ageGroup: '儿童',
+        gender: '女',
+        language: '中文',
     },
     bingjiaoDidi: {
         title: '病娇弟弟',
@@ -239,6 +302,9 @@ export const voicePresets = {
         value: 'bingjiao_didi',
         demo: 'd63e53e5-cae9-4dbc-92c2-0c7a23eed1f2.mp3',
         tags: ['男', '青年', '中文'],
+        ageGroup: '青年',
+        gender: '男',
+        language: '中文',
     },
     junlangNanyou: {
         title: '俊朗男友',
@@ -246,6 +312,9 @@ export const voicePresets = {
         value: 'junlang_nanyou',
         demo: 'fd7c65f3-83d0-494d-b651-92a9e823aec6.mp3',
         tags: ['男', '青年', '中文'],
+        ageGroup: '青年',
+        gender: '男',
+        language: '中文',
     },
     chunzhenXuedi: {
         title: '纯真学弟',
@@ -253,6 +322,9 @@ export const voicePresets = {
         value: 'chunzhen_xuedi',
         demo: '62496011-61cf-44cf-a0bd-d5afb9a9d163.mp3',
         tags: ['男', '青年', '中文'],
+        ageGroup: '青年',
+        gender: '男',
+        language: '中文',
     },
     lengdanXiongzhang: {
         title: '冷淡学长',
@@ -260,6 +332,9 @@ export const voicePresets = {
         value: 'lengdan_xiongzhang',
         demo: '7a9b034e-68dd-4caf-ae38-99baa8ba263c.mp3',
         tags: ['男', '青年', '中文'],
+        ageGroup: '青年',
+        gender: '男',
+        language: '中文',
     },
     badaoShaoye: {
         title: '霸道少爷',
@@ -267,6 +342,9 @@ export const voicePresets = {
         value: 'badao_shaoye',
         demo: 'c7a5ea87-b037-47c0-bcf0-d1e83528fc5f.mp3',
         tags: ['男', '青年', '中文'],
+        ageGroup: '青年',
+        gender: '男',
+        language: '中文',
     },
     tianxinXiaoling: {
         title: '甜心小玲',
@@ -274,6 +352,9 @@ export const voicePresets = {
         value: 'tianxin_xiaoling',
         demo: 'be020d4e-3fb2-4b1a-950b-e1cc1ec50939.mp3',
         tags: ['女', '青年', '中文'],
+        ageGroup: '青年',
+        gender: '女',
+        language: '中文',
     },
     qiaopiMengmei: {
         title: '俏皮萌妹',
@@ -281,6 +362,9 @@ export const voicePresets = {
         value: 'qiaopi_mengmei',
         demo: '521d275d-10d4-4fd9-8e6a-fb67c3ca1dc7.mp3',
         tags: ['女', '青年', '中文'],
+        ageGroup: '青年',
+        gender: '女',
+        language: '中文',
     },
     wumeiYujie: {
         title: '妩媚御姐',
@@ -288,6 +372,9 @@ export const voicePresets = {
         value: 'wumei_yujie',
         demo: '06b5be5a-327d-48e2-bb89-d2cee595a475.mp3',
         tags: ['女', '青年', '中文'],
+        ageGroup: '青年',
+        gender: '女',
+        language: '中文',
     },
     diadiaXuemei: {
         title: '嗲嗲学妹',
@@ -295,6 +382,9 @@ export const voicePresets = {
         value: 'diadia_xuemei',
         demo: 'e9323391-cf83-478c-b9a0-d6f7d2d02d96.mp3',
         tags: ['女', '青年', '中文'],
+        ageGroup: '青年',
+        gender: '女',
+        language: '中文',
     },
     danyaXuejie: {
         title: '淡雅学姐',
@@ -302,6 +392,9 @@ export const voicePresets = {
         value: 'danya_xuejie',
         demo: '4992337d-0326-42e2-8a33-63683301b937.mp3',
         tags: ['女', '青年', '中文'],
+        ageGroup: '青年',
+        gender: '女',
+        language: '中文',
     },
     santaClaus: {
         title: 'Santa Claus',
@@ -309,6 +402,9 @@ export const voicePresets = {
         value: 'Santa_Claus',
         demo: 'd0b1794a-76a6-4dfc-a689-d4e53d5ab76b.mp3',
         tags: ['男', '老年', '英语'],
+        ageGroup: '老年',
+        gender: '男',
+        language: '英语',
     },
     grinch: {
         title: 'Grinch',
@@ -316,6 +412,9 @@ export const voicePresets = {
         value: 'Grinch',
         demo: '22d950f8-5e23-4237-817f-dae411fdd8f0.mp3',
         tags: ['男', '成年', '英语'],
+        ageGroup: '成年',
+        gender: '男',
+        language: '英语',
     },
     rudolph: {
         title: 'Rudolph',
@@ -323,6 +422,9 @@ export const voicePresets = {
         value: 'Rudolph',
         demo: '53c21406-81bd-4f49-8c32-3160ef567767.mp3',
         tags: ['男', '青年', '英语'],
+        ageGroup: '青年',
+        gender: '男',
+        language: '英语',
     },
     arnold: {
         title: 'Arnold',
@@ -330,6 +432,9 @@ export const voicePresets = {
         value: 'Arnold',
         demo: '5fb41d4a-fd7b-48ba-8119-09c81f679b29.mp3',
         tags: ['男', '成年', '英语'],
+        ageGroup: '成年',
+        gender: '男',
+        language: '英语',
     },
     charmingSanta: {
         title: 'Charming Santa',
@@ -337,6 +442,9 @@ export const voicePresets = {
         value: 'Charming_Santa',
         demo: 'd55febbf-7854-4823-a52e-6b5708bb5da6.mp3',
         tags: ['男', '老年', '英语'],
+        ageGroup: '老年',
+        gender: '男',
+        language: '英语',
     },
     charmingLady: {
         title: 'Charming Lady',
@@ -344,6 +452,9 @@ export const voicePresets = {
         value: 'Charming_Lady',
         demo: '6c80d0da-8e46-4b2b-b048-6ff4971b6cdc.mp3',
         tags: ['女', '成年', '英语'],
+        ageGroup: '成年',
+        gender: '女',
+        language: '英语',
     },
     sweetGirl: {
         title: 'Sweet Girl',
@@ -351,6 +462,9 @@ export const voicePresets = {
         value: 'Sweet_Girl',
         demo: '5bc60a6d-f644-4135-a5b6-c551d34c265c.mp3',
         tags: ['女', '青年', '英语'],
+        ageGroup: '青年',
+        gender: '女',
+        language: '英语',
     },
     cuteElf: {
         title: 'Cute Elf',
@@ -358,6 +472,9 @@ export const voicePresets = {
         value: 'Cute_Elf',
         demo: '88443567-1971-489c-b8ce-fe99e6ccce0d.mp3',
         tags: ['女', '青年', '英语'],
+        ageGroup: '青年',
+        gender: '女',
+        language: '英语',
     },
     attractiveGirl: {
         title: 'Attractive Girl',
@@ -365,6 +482,9 @@ export const voicePresets = {
         value: 'Attractive_Girl',
         demo: '532959ef-051b-46ff-a747-f30f83d5ace3.mp3',
         tags: ['女', '青年', '英语'],
+        ageGroup: '青年',
+        gender: '女',
+        language: '英语',
     },
     sereneWoman: {
         title: 'Serene Woman',
@@ -372,6 +492,9 @@ export const voicePresets = {
         value: 'Serene_Woman',
         demo: 'f5ac58a0-c7f7-4c08-b716-1f172f1fb577.mp3',
         tags: ['女', '成年', '英语'],
+        ageGroup: '成年',
+        gender: '女',
+        language: '英语',
     },
 } as const
 
