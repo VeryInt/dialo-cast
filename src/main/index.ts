@@ -22,6 +22,7 @@ const createWindow = (): void => {
     const mainWindow = new BrowserWindow({
         height: 1150,
         width: 1280,
+        autoHideMenuBar: true, // 初始隐藏菜单栏
         minHeight: 800,
         minWidth: 800,
         webPreferences: {

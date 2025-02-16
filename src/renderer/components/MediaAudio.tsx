@@ -40,8 +40,8 @@ export default function MediaAudio({
                 <MediaThemeSutroAudio
                     style={{
                         // @ts-ignore
-                        '--media-primary-color': '#fff',
-                        '--media-secondary-color': '#444',
+                        '--media-primary-color': '#efefef',
+                        '--media-secondary-color': '#343434',
                         width: '100%',
                     }}
                 >

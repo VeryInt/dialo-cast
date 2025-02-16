@@ -39,6 +39,7 @@ import {
     DIALOGUE_TYPE,
     VoicePresetValues,
 } from '../../shared/constants'
+import AlertPopup from '../components/AlertPopup'
 import DialogDisplay from '../components/DialogDisplay'
 import AudioPlayer from '../components/AudioPlayer'
 import MediaAudio from '../components/MediaAudio'
@@ -112,18 +113,34 @@ export default function MainInterface({ className }: { className?: string }) {
     const state = useMainStore(state => state)
 
     const [dialogueList, setDialogueList] = useState<any[]>([])
-    const { audioPlayFile } = state || {}
+    const { audioPlayFile, updateCurrentPage } = state || {}
     const [activeTab, setActiveTab] = useState<DIALOGUE_TYPE>(DIALOGUE_TYPE.TOPIC)
     const [isEnglish, setIsEnglish] = useState(false)
     const [voiceSpeed, setVoiceSpeed] = useState(1)
+    const [showConfirm, setShowConfirm] = useState(false)
+
     const [generatingStatus, setGeneratingStatus] = useState(GeneratingSatus.DialogueGenerating)
     const { castTopic, isGenerating, updateCastTopic, updateIsGenerating, updateAudioPlayFile } = state || {}
     const handleUpdateTopic = topic => {
-        updateCastTopic(topic)
+        !isGenerating && updateCastTopic(topic)
+    }
+
+    const handleGoSettings = () => {
+        updateCurrentPage('settings')
+        setShowConfirm(false)
     }
 
     const handleGenerate = async () => {
         if (isGenerating) return
+
+        // 判断是否有api
+        const miniMaxGroupID = await electronServices.getConfig(CONFIG_STORE_KEYS.miniMaxGroupID)
+        const miniMaxApiKey = await electronServices.getConfig(CONFIG_STORE_KEYS.miniMaxApiKey)
+        if (!miniMaxApiKey || !miniMaxGroupID) {
+            setShowConfirm(true)
+            return
+        }
+
         updateIsGenerating(true)
         let topicContent = castTopic
         if (activeTab == DIALOGUE_TYPE.PRODUCT_ITINERARY) {
@@ -214,27 +231,41 @@ export default function MainInterface({ className }: { className?: string }) {
                                             )
                                         })}
                                     </TabsList>
-                                    <TabsContent value={DIALOGUE_TYPE.TOPIC}>
-                                        {/* <PodcastGenerator callback={setDialogueList} /> */}
+                                    <div className="mt-2">
+                                        <PodcastTab
+                                            isCurrentTab={activeTab === DIALOGUE_TYPE.TOPIC}
+                                            callback={handleUpdateTopic}
+                                            className={`${activeTab === DIALOGUE_TYPE.TOPIC ? '' : 'hidden'}`}
+                                        />
+                                        <ProductTab
+                                            isCurrentTab={activeTab === DIALOGUE_TYPE.PRODUCT_ITINERARY}
+                                            callback={handleUpdateTopic}
+                                            className={`${activeTab === DIALOGUE_TYPE.PRODUCT_ITINERARY ? '' : 'hidden'}`}
+                                        />
+                                        <PDFTab
+                                            isCurrentTab={activeTab === DIALOGUE_TYPE.PDF}
+                                            callback={handleUpdateTopic}
+                                            className={`${activeTab === DIALOGUE_TYPE.PDF ? '' : 'hidden'}`}
+                                        />
+                                    </div>
+                                    {/* <TabsContent value={DIALOGUE_TYPE.TOPIC}>
                                         <PodcastTab
                                             isCurrentTab={activeTab === DIALOGUE_TYPE.TOPIC}
                                             callback={handleUpdateTopic}
                                         />
                                     </TabsContent>
                                     <TabsContent value={DIALOGUE_TYPE.PRODUCT_ITINERARY}>
-                                        {/* <ProductCastGenerator callback={setDialogueList} /> */}
                                         <ProductTab
                                             isCurrentTab={activeTab === DIALOGUE_TYPE.PRODUCT_ITINERARY}
                                             callback={handleUpdateTopic}
                                         />
                                     </TabsContent>
                                     <TabsContent value={DIALOGUE_TYPE.PDF}>
-                                        {/* <PDFPodcastGenerator /> */}
                                         <PDFTab
                                             isCurrentTab={activeTab === DIALOGUE_TYPE.PDF}
                                             callback={handleUpdateTopic}
                                         />
-                                    </TabsContent>
+                                    </TabsContent> */}
                                 </Tabs>
                             </CardContent>
                         </Card>
@@ -288,7 +319,7 @@ export default function MainInterface({ className }: { className?: string }) {
                                     whileHover={{ scale: 1.01 }}
                                     whileTap={{ scale: 0.98 }}
                                     disabled={!castTopic || isGenerating}
-                                    className={`w-full py-3  text-white rounded-lg font-medium flex items-center justify-center gap-2 shadow-lg ${!castTopic || isGenerating ? ' cursor-not-allowed bg-gray-500' : 'cursor-pointer bg-gradient-to-r from-gray-600 to-gray-700'}`}
+                                    className={`w-full py-3 text-white rounded-lg font-medium flex items-center justify-center gap-2 shadow-lg ${!castTopic || isGenerating ? ' cursor-not-allowed bg-gray-300 !text-gray-50' : 'cursor-pointer bg-gradient-to-r from-stone-800 to-stone-950'}`}
                                 >
                                     {isGenerating ? (
                                         <>
@@ -316,56 +347,18 @@ export default function MainInterface({ className }: { className?: string }) {
                     </div>
                 </div>
             </div>
+
+            <AlertPopup
+                isOpen={showConfirm}
+                title={`确认删除`}
+                content={`请先填写API`}
+                onCancel={() => setShowConfirm(false)}
+                onConfirm={handleGoSettings}
+                cancelText="取消"
+                confirmText="去填写"
+            />
         </div>
     )
-
-    // return (
-    //     <div className={`container mx-auto p-4 ${className || ''}`}>
-    //         <h1 className="text-2xl font-bold my-4">主界面</h1>
-    //         <div className={`flex w-full flex-col gap-6 min-w-md `}>
-    //             <div className="">
-    //                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-    //                     <TabsList className="grid w-full grid-cols-3 gap-2 bg-gray-100 min-h-12 ">
-    //                         <TabsTrigger
-    //                             value="topicCast"
-    //                             className="flex items-center cursor-pointer h-8 data-[state=active]:bg-gray-600 data-[state=active]:font-bold data-[state=active]:text-white bg-gray-200 shadow-md"
-    //                         >
-    //                             主题播客
-    //                         </TabsTrigger>
-    //                         <TabsTrigger
-    //                             value="productItinerary"
-    //                             className="flex items-center cursor-pointer h-8 data-[state=active]:bg-gray-600 data-[state=active]:font-bold data-[state=active]:text-white bg-gray-200 shadow-md"
-    //                         >
-    //                             产品行程
-    //                         </TabsTrigger>
-    //                         <TabsTrigger
-    //                             value="PDFCast"
-    //                             className="flex items-center cursor-pointer h-8 data-[state=active]:bg-gray-600 data-[state=active]:font-bold data-[state=active]:text-white bg-gray-200 shadow-md"
-    //                         >
-    //                             PDF
-    //                         </TabsTrigger>
-    //                     </TabsList>
-    //                     <TabsContent value="topicCast">
-    //                         <PodcastGenerator callback={setDialogueList} />
-    //                     </TabsContent>
-    //                     <TabsContent value="productItinerary">
-    //                         <ProductCastGenerator callback={setDialogueList} />
-    //                     </TabsContent>
-    //                     <TabsContent value="PDFCast">
-    //                         <PDFPodcastGenerator />
-    //                     </TabsContent>
-    //                 </Tabs>
-    //             </div>
-    //             {/* <AudioPlayer audioFileName={audioPlayFile} /> */}
-    //             <MediaAudio audioFileName={audioPlayFile} useSutro={true} />
-    //             {dialogueList?.length ? (
-    //                 <div className="border-gray-100 bg-white rounded-2xl shadow-xl py-8 w-full mx-auto text-sm">
-    //                     <DialogDisplay conversationList={dialogueList} className="max-h-[28rem] overflow-y-auto mx-6" />
-    //                 </div>
-    //             ) : null}
-    //         </div>
-    //     </div>
-    // )
 }
 
 const VoiceSelection = React.memo(({ className }: { className?: string }) => {
@@ -432,7 +425,15 @@ const VoiceSelection = React.memo(({ className }: { className?: string }) => {
     )
 })
 
-const PodcastTab = ({ isCurrentTab, callback }: { isCurrentTab: boolean; callback: (content: string) => void }) => {
+const PodcastTab = ({
+    className,
+    isCurrentTab,
+    callback,
+}: {
+    className?: string
+    isCurrentTab: boolean
+    callback: (content: string) => void
+}) => {
     const [content, setContent] = useState('')
     const handleChange = e => {
         const value = e.target.value
@@ -447,16 +448,26 @@ const PodcastTab = ({ isCurrentTab, callback }: { isCurrentTab: boolean; callbac
     }, [isCurrentTab])
 
     return (
-        <Textarea
-            placeholder="请输入您想要讨论的播客主题..."
-            className="min-h-28 bg-gray-50"
-            value={content}
-            onChange={handleChange}
-        />
+        <div className={`${className || ''}`}>
+            <Textarea
+                placeholder="请输入您想要讨论的播客主题..."
+                className="min-h-28 bg-gray-50"
+                value={content}
+                onChange={handleChange}
+            />
+        </div>
     )
 }
 
-const ProductTab = ({ isCurrentTab, callback }: { isCurrentTab: boolean; callback: (content: string) => void }) => {
+const ProductTab = ({
+    className,
+    isCurrentTab,
+    callback,
+}: {
+    className?: string
+    isCurrentTab: boolean
+    callback: (content: string) => void
+}) => {
     const [content, setContent] = useState('')
     const handleUpdateProductID = e => {
         const value = e.target.value
@@ -470,10 +481,22 @@ const ProductTab = ({ isCurrentTab, callback }: { isCurrentTab: boolean; callbac
         }
     }, [isCurrentTab])
 
-    return <Input placeholder="输入产品ID" value={content} onChange={handleUpdateProductID} />
+    return (
+        <div className={`${className || ''}`}>
+            <Input placeholder="输入产品ID" value={content} onChange={handleUpdateProductID} />
+        </div>
+    )
 }
 
-const PDFTab = ({ isCurrentTab, callback }: { isCurrentTab: boolean; callback: (content: string) => void }) => {
+const PDFTab = ({
+    className,
+    isCurrentTab,
+    callback,
+}: {
+    className?: string
+    isCurrentTab: boolean
+    callback: (content: string) => void
+}) => {
     const [PDFFile, setPDFFile] = useState<Record<string, any>>({})
     const [PDFContent, setPDFContent] = useState('')
     const onDrop = useCallback(acceptedFiles => {
@@ -516,7 +539,7 @@ const PDFTab = ({ isCurrentTab, callback }: { isCurrentTab: boolean; callback: (
     return (
         <div
             {...getRootProps()}
-            className=" bg-gray-200 rounded-2xl min-h-20 text-gray-700 text-sm font-bold flex items-center justify-center cursor-pointer"
+            className={` bg-gray-200 rounded-2xl min-h-20 text-gray-700 text-sm font-bold flex items-center justify-center cursor-pointer ${className || ''}`}
         >
             <input {...getInputProps()} />
             {PDFFile?.name ? (

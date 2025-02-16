@@ -102,7 +102,7 @@ const AudioDemoCard = ({ demo, isPlaying, onPlay }: { demo: VoiceDemo; isPlaying
                         whileTap={{ scale: 0.95 }}
                     >
                         <div className="absolute inset-0 rounded-xl bg-white opacity-0 hover:opacity-10 transition-opacity" />
-                        <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="absolute inset-0 flex items-center justify-center  cursor-pointer">
                             {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-1" />}
                         </div>
                     </motion.button>

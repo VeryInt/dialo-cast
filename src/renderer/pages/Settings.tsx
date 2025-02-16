@@ -7,7 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert'
 import { ExternalLink } from 'lucide-react'
 import { electronServices } from '../../services'
 import { CONFIG_STORE_KEYS } from '../../shared/constants'
-
+import KeyInput from '../components/KeyInput'
 export default function Settings({ className }: { className?: string }) {
     const [apiKey, setApiKey] = useState('')
     const [groupID, setGroupID] = useState('')
@@ -66,13 +66,12 @@ export default function Settings({ className }: { className?: string }) {
                                         获取API <ExternalLink className="ml-2 w-3 h-3" />
                                     </span>
                                 </div>
-                                <Input
+                                <KeyInput
                                     id="api-key"
-                                    type="text"
                                     value={apiKey}
                                     onChange={e => setApiKey(e.target.value)}
                                     placeholder="输入您的 API Key"
-                                    className="text-lg p-6"
+                                    className="text-lg p-3"
                                 />
                             </div>
                             <div className="flex flex-col gap-1">
@@ -97,7 +96,7 @@ export default function Settings({ className }: { className?: string }) {
                                     value={groupID}
                                     onChange={e => setGroupID(e.target.value)}
                                     placeholder="输入您的 GroupID"
-                                    className="text-lg p-6"
+                                    className="text-lg p-3"
                                 />
                             </div>
                         </div>

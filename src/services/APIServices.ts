@@ -25,9 +25,7 @@ const handlers = {
         try {
             const isEnglish = getConfig(CONFIG_STORE_KEYS.englishDialog) || false
             console.log(`isEnglish Dialogue`, isEnglish)
-            const openai = getOpenAI(
-                apiKey || (getConfig(CONFIG_STORE_KEYS.miniMaxApiKey) as string) || process.env.MIN_MAX_API_KEY
-            )
+            const openai = getOpenAI(apiKey || (getConfig(CONFIG_STORE_KEYS.miniMaxApiKey) as string) || '')
             const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
                 { role: 'system', content: isEnglish ? ENG_PODCAST_EXPERT_PROMPT : PODCAST_EXPERT_PROMPT },
                 { role: 'user', content: topic },
@@ -92,8 +90,8 @@ const handlers = {
         event,
         { content, emotion, voiceID }: { content: string; emotion?: string; voiceID?: VoicePresetValues }
     ) => {
-        const apiKey = (getConfig(CONFIG_STORE_KEYS.miniMaxApiKey) as string) || process.env.MIN_MAX_API_KEY || ``
-        const groundID = (getConfig(CONFIG_STORE_KEYS.miniMaxGroupID) as string) || process.env.MIN_MAX_GROUND_ID || ``
+        const apiKey = (getConfig(CONFIG_STORE_KEYS.miniMaxApiKey) as string) || ``
+        const groundID = (getConfig(CONFIG_STORE_KEYS.miniMaxGroupID) as string) || ``
         const voiceSpeed = Number(getConfig(CONFIG_STORE_KEYS.voiceSpeed) || 0) || 1.15
         const url = `https://api.minimax.chat/v1/t2a_v2?GroupId=${groundID}`
         console.log(`🐹🐹🐹fetchMinMaxAudio start`, content, emotion, voiceID)
@@ -110,7 +108,7 @@ const handlers = {
                     voice_id: voiceID || voicePresets.badaoShaoye.value,
                     speed: voiceSpeed, // 语速
                     vol: 2, // 音量
-                    pitch: -1, // 声调
+                    pitch: 0, // 声调 -1
                 },
                 audio_setting: {
                     sample_rate: 32000,

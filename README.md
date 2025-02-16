@@ -80,8 +80,8 @@ npm run build
 
 在启动应用之前，确保设置以下环境变量：
 
-- `MIN_MAX_API_KEY`：MINIMAX 提供的 API 访问密钥。
-- `MIN_MAX_GROUND_ID`：注册 MINIMAX 后的用户Group ID。
+- ~~`MIN_MAX_API_KEY`：MINIMAX 提供的 API 访问密钥。~~
+- ~~`MIN_MAX_GROUND_ID`：注册 MINIMAX 后的用户Group ID。~~
 
 ### 示例配置文件
 
